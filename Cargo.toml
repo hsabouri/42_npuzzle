@@ -1,0 +1,6 @@
+[package]
+name = "graph_tests"
+version = "0.1.0"
+authors = ["Hugo Sabourin <hsabouri@student.42.fr>"]
+
+[dependencies]
