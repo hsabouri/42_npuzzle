@@ -5,8 +5,7 @@ fn main() {
     {
         let mut node_mut = map.get_node_mut(lib::Cell {x: 1, y: 1}).unwrap();
         
-        node_mut.ctype = lib::CellType::Target;
-        println!("{:#?}", node_mut)
+        println!("{:#?}", node_mut);
     }
     let mut node = map.get_node(lib::Cell {x: 1, y: 1}).unwrap();
     println!("{:#?}", node)

@@ -57,6 +57,33 @@ impl Node {
             f: None,
         }
     }
+
+    pub fn set_parent(&mut self, node: Cell) {
+        if (self.pos.x == node.x && (node.y == self.pos.y - 1 || node.y == self.pos.y + 1)) ||
+           (self.pos.y == node.y && (node.x == self.pos.y - 1 || node.x == self.pos.y + 1)) {
+            self.parent = Some(node);
+        } else {
+            panic!("Assigning not valid parent");
+        }
+    }
+
+    pub fn set_child(&mut self, node: Cell) {
+        if self.nchilds >= 4 {
+            panic!("Trying to assign to many childs to a node");
+        }
+        for child in &self.childs {
+            if child.is_some() && node == child.unwrap() {
+                panic!("Trying to assign an already assigned child");
+            }
+        }
+        if (self.pos.x == node.x && (node.y == self.pos.y - 1 || node.y == self.pos.y + 1)) ||
+           (self.pos.y == node.y && (node.x == self.pos.y - 1 || node.x == self.pos.y + 1)) {
+            self.childs[self.nchilds] = Some(node);
+            self.nchilds += 1;
+        } else {
+            panic!("Assigning not valid child");
+        }
+    }
 }
 
 impl Map {
