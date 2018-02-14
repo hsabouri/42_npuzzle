@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct Cell {
     pub x: usize,
     pub y: usize,
@@ -14,12 +14,10 @@ pub enum CellType {
 
 impl CellType {
     pub fn figure_out(node: Cell, source: Cell, target: Cell) -> CellType {
-        if node == source {
-            CellType::Source
-        } else if node == target {
-            CellType::Target
-        } else {
-            CellType::Clear
+        match (node.x, node.y) {
+            (target.x, target.y) => CellType::Target,
+            (source.x, source.y) => CellType::Source,
+            _ => CellType::Clear,
         }
     }
 }
