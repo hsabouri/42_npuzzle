@@ -1,12 +1,17 @@
 mod lib;
 
+fn solve(map: &mut lib::Map) {
+    let source_pos = map.source;
+    let childs = map.get_node(source_pos).unwrap().search_childs(map);
+    let mut source = map.get_node_mut(source_pos).unwrap();
+
+    source.set_childs(childs);
+}
+
 fn main() {
-    let mut map = lib::Map::new(3, lib::Cell {x: 0, y: 0}, lib::Cell {x: 2, y: 2});
-    {
-        let mut node_mut = map.get_node_mut(lib::Cell {x: 1, y: 1}).unwrap();
-        
-        println!("{:#?}", node_mut);
-    }
-    let mut node = map.get_node(lib::Cell {x: 1, y: 1}).unwrap();
-    println!("{:#?}", node)
+    let mut map = lib::Map::new(4, lib::Cell {x: 0, y: 0}, lib::Cell {x: 2, y: 2});
+
+    solve(&mut map);
+
+    println!("{:#?}", map);
 }

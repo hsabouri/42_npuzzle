@@ -4,7 +4,7 @@ pub struct Cell {
     pub y: usize,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CellType {
     Clear,
     Wall,
@@ -38,10 +38,10 @@ pub struct Node {
 
 #[derive(Debug)]
 pub struct Map {
-    content:    Vec<Node>,
-    pub size:   usize,
-    source:     Cell,
-    target:     Cell,
+    content: Vec<Node>,
+    pub size: usize,
+    pub source: Cell,
+    pub target: Cell,
 }
 
 impl Node {
@@ -83,6 +83,48 @@ impl Node {
         } else {
             panic!("Assigning not valid child");
         }
+    }
+
+    pub fn check_child(&self, cell: Cell, map: &Map) -> bool {
+        let node = map.get_node(cell);
+        let mut res = false;
+
+        if node.is_some() &&
+           node.unwrap().ctype != CellType::Wall &&
+           node.unwrap().ctype != CellType::Target &&
+           (self.parent.is_none() || node.unwrap().pos != self.parent.unwrap()) {
+            res = true
+        }
+        res
+    }
+
+    pub fn search_childs(&self, map: &Map) -> Vec<Cell> {
+        let mut res = Vec::<Cell>::new();
+
+        if self.pos.x > 0 {
+            let left = Cell {x: self.pos.x - 1, y: self.pos.y};
+            if self.check_child(left, map) {
+                res.push(left);
+            }
+        }
+        let right = Cell {x: self.pos.x + 1, y: self.pos.y};
+        if self.check_child(right, map) {
+            res.push(right);
+        }
+        if self.pos.y > 0 {
+            let top = Cell {x: self.pos.x, y: self.pos.y - 1};
+            if self.check_child(top, map) {
+                res.push(top);
+            }
+        }
+        let bottom = Cell {x: self.pos.x, y: self.pos.y + 1};
+        if self.check_child(bottom, map) {
+            res.push(bottom);
+        }
+        res
+    }
+
+    pub fn set_childs(&mut self, childs: Vec<Cell>) {
     }
 }
 
