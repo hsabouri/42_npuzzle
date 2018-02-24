@@ -57,6 +57,77 @@ impl Map {
         res
     }
 
+    pub fn get_solved(side: usize) -> Map {
+        let (mut x, mut y) = (
+            match side % 2 {
+                0 => side / 2,
+                _ => side / 2 - 1,
+            },
+            match side % 2 {
+                0 => side / 2 + 1,
+                _ => side / 2 - 1,
+            }
+        );
+        let size = side * side;
+        let mut map: Vec<usize> = (0..size).map(|_| 0).collect();
+        let mut direction: Movement = match side % 2 {
+            0 => Movement::Up,
+            _ => Movement::Down,
+        };
+        let mut n = size - 1;
+
+        for turn in 0..(side * 2 - 2) {
+            let to_push: usize = {
+                if turn == 0 || turn == 1 {
+                    2
+                } else if turn == (side * 2 - 3)  {
+                    side - 1 
+                } else {
+                    (turn + 1) / 2 + 1
+                }
+            };
+            println!("turn: {}, to_push {}, direction: {:?}", turn, to_push, direction);
+            for _ in 0..to_push {
+                x = match direction {
+                    Movement::Left => x - 1,
+                    Movement::Right => x + 1,
+                    _ => x,
+                };
+                y = match direction {
+                    Movement::Up => y - 1,
+                    Movement::Down=> y + 1,
+                    _ => y,
+                };
+                println!("n: {}, x: {}, y: {}", n, x, y);
+                map[x + y * side] = n;
+                n = n - 1;
+            }
+            direction = match direction {
+                Movement::Up => Movement::Left,
+                Movement::Left => Movement::Down,
+                Movement::Down => Movement::Right,
+                Movement::Right => Movement::Up,
+                _ => Movement::No,
+            };
+        }
+        Map {
+            content: map,
+            pos: Point {x: side / 2, y: side / 2},
+            size: side,
+            costs: (0..(size - 1)).map(|_| 0).collect(),
+        }
+    }
+
+    pub fn display(&self) {
+        for y in 0..self.size {
+            let mut to_display = String::from("");
+            for x in 0..self.size {
+                to_display.push_str(format!("{:4}", self.content[x + y * self.size]).as_str());
+            }
+            println!("{}\n", to_display);
+        }
+    }
+
     pub fn gen(size: usize) -> Map {
         let mut topush: Vec<usize> = (0..(size * size)).collect();
         let mut pos = Point {x: 0, y: 0};
@@ -77,15 +148,11 @@ impl Map {
             costs: (0..(size * size)).collect(),
         }
     }
-
-    pub fn get_solved(&self) -> Map {
-        
-    }
 }
 
 #[derive(Debug, Clone)]
 pub struct Node {
-    map: Map,
+    pub map: Map,
     parent: usize,
     movement: Movement,
     hash: usize, // Can basically be a weighted addition of the content and the complexity
@@ -122,7 +189,7 @@ impl Node {
 
     pub fn gen(size: usize) -> (Node, Node) {
         let random: usize = rand::random::<usize>();
-        Node {
+        (Node {
             map: Map::gen(size),
             parent: 0,
             movement: Movement::No,
@@ -130,6 +197,14 @@ impl Node {
             g: 0,
             h: random, //TODO
             f: random, //TODO
-        }
+        }, Node {
+            map: Map::get_solved(size),
+            parent: 0,
+            movement: Movement::No,
+            hash: 0, //TODO
+            g: 0,
+            h: 0,
+            f: 0,
+        })
     }
 }
