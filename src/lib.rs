@@ -1,7 +1,7 @@
 extern crate rand;
 use rand::Rng;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Movement {
     Up,
     Down,
@@ -18,10 +18,10 @@ pub struct Point {
 
 #[derive(Debug, Clone)]
 pub struct Map {
-    content: Vec<usize>,
-    pos: Point,
-    size: usize,
-    costs: Vec<usize>,
+    pub content: Vec<usize>,
+    pub pos: Point,
+    pub size: usize,
+    pub costs: Vec<usize>,
 }
 
 impl Map {
@@ -33,28 +33,38 @@ impl Map {
             costs: costs,
         }
     }
-    
-    pub fn child(old: &Map, movement: &Movement) -> Map {
-        let mut res = old.clone();
 
-        res.content.swap(old.pos.x + old.pos.y * old.size, {
+    pub fn get_costs(&self, old: Option<&Map>, solved: &Map) -> Vec<usize> {
+        let mut res = Vec::<usize>::new();
+
+        for (i, value) in self.content.iter().enumerate() {
+            res.push(if *value == solved.content[i] {0} else {1});
+        }
+        res
+    }
+
+    pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {
+        self.get_costs(old, solved).iter().fold(0, |acc, &x| acc + x)
+    }
+    
+    pub fn child(&mut self, movement: &Movement) {
+        self.content.swap(self.pos.x + self.pos.y * self.size, {
             match *movement {
-                Movement::Down => old.pos.x + (old.pos.y - 1) * old.size,
-                Movement::Up => old.pos.x + (old.pos.y + 1) * old.size,
-                Movement::Right => (old.pos.x - 1) + old.pos.y * old.size,
-                Movement::Left => (old.pos.x + 1) + old.pos.y * old.size,
-                Movement::No => old.pos.x + old.pos.y * old.size,
+                Movement::Down => self.pos.x + (self.pos.y - 1) * self.size,
+                Movement::Up => self.pos.x + (self.pos.y + 1) * self.size,
+                Movement::Right => (self.pos.x - 1) + self.pos.y * self.size,
+                Movement::Left => (self.pos.x + 1) + self.pos.y * self.size,
+                Movement::No => self.pos.x + self.pos.y * self.size,
             }
         });
 
-        res.pos = match *movement {
-            Movement::Right => Point {x: old.pos.x - 1, y: old.pos.y},
-            Movement::Left => Point {x: old.pos.x + 1, y: old.pos.y},
-            Movement::Down => Point {x: old.pos.x, y: old.pos.y - 1},
-            Movement::Up => Point {x: old.pos.x, y: old.pos.y + 1},
-            Movement::No => Point {x: old.pos.x, y: old.pos.y},
+        self.pos = match *movement {
+            Movement::Right => Point {x: self.pos.x - 1, y: self.pos.y},
+            Movement::Left => Point {x: self.pos.x + 1, y: self.pos.y},
+            Movement::Down => Point {x: self.pos.x, y: self.pos.y - 1},
+            Movement::Up => Point {x: self.pos.x, y: self.pos.y + 1},
+            Movement::No => Point {x: self.pos.x, y: self.pos.y},
         };
-        res
     }
 
     pub fn get_solved(side: usize) -> Map {
@@ -86,7 +96,6 @@ impl Map {
                     (turn + 1) / 2 + 1
                 }
             };
-            println!("turn: {}, to_push {}, direction: {:?}", turn, to_push, direction);
             for _ in 0..to_push {
                 x = match direction {
                     Movement::Left => x - 1,
@@ -98,7 +107,6 @@ impl Map {
                     Movement::Down=> y + 1,
                     _ => y,
                 };
-                println!("n: {}, x: {}, y: {}", n, x, y);
                 map[x + y * side] = n;
                 n = n - 1;
             }
@@ -112,7 +120,13 @@ impl Map {
         }
         Map {
             content: map,
-            pos: Point {x: side / 2, y: side / 2},
+            pos: Point {
+                x: match side % 2 {
+                    0 => side / 2 - 1,
+                    _ => side / 2,
+                },
+                y: side / 2
+            },
             size: side,
             costs: (0..(size - 1)).map(|_| 0).collect(),
         }
@@ -128,7 +142,7 @@ impl Map {
         }
     }
 
-    pub fn gen(size: usize) -> Map {
+    pub fn gen(size: usize, solved: &Map) -> Map {
         let mut topush: Vec<usize> = (0..(size * size)).collect();
         let mut pos = Point {x: 0, y: 0};
         let content: Vec<usize> = (0..(size * size)).map(|map_id: usize| {
@@ -141,30 +155,32 @@ impl Map {
             }
             res
         }).collect();
-        Map {
+        let mut res = Map {
             content: content,
             pos: pos,
             size: size,
             costs: (0..(size * size)).collect(),
-        }
+        };
+        res.costs = res.get_costs(None, solved);
+        res
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Node {
-    pub map: Map,
-    parent: usize,
-    movement: Movement,
-    hash: usize, // Can basically be a weighted addition of the content and the complexity
-    g: usize,
-    h: usize,
-    f: usize,
+    pub map: Option<Map>,
+    pub parent: usize,
+    pub movement: Movement,
+    pub hash: usize, // Can basically be a weighted addition of the content and the complexity
+    pub g: usize,
+    pub h: usize,
+    pub f: usize,
 }
 
 impl Node {
     pub fn new(map: Map, parent: usize, movement: Movement, hash: usize, g: usize, h: usize, f: usize) -> Node {
         Node {
-            map: map,
+            map: Some(map),
             parent: parent,
             movement: movement,
             hash: hash,
@@ -174,37 +190,44 @@ impl Node {
         }
     }
 
-    pub fn child(old: &Node, movement: Movement, parent: usize) -> Node {
-        let random: usize = rand::random::<usize>();
+    pub fn child(&mut self, movement: Movement, parent: usize, solved: &Map) -> Node {
+        let mut map = self.map.clone().unwrap();
+
+        map.child(&movement);
+        let h = map.get_cost(None, &solved);
         Node {
-            map: Map::child(&old.map, &movement),
+            map: Some(map),
             parent: parent,
             movement: movement,
-            hash: 0, // TODO
-            g: old.g + 1,
-            h: random, // TODO
-            f: old.g + 1 + random, // TODO
+            hash: 0, //TODO
+            g: self.g + 1,
+            h: h,
+            f: self.g + 1 + h,
         }
     }
 
     pub fn gen(size: usize) -> (Node, Node) {
-        let random: usize = rand::random::<usize>();
+        let solved = Map::get_solved(size);
+        let map = Map::gen(size, &solved);
+        let h = map.get_cost(None, &solved);
+            
         (Node {
-            map: Map::gen(size),
+            map: Some(map),
             parent: 0,
             movement: Movement::No,
-            hash: 0, //TODO
+            hash: 0,
             g: 0,
-            h: random, //TODO
-            f: random, //TODO
+            h: h,
+            f: h,
         }, Node {
-            map: Map::get_solved(size),
+             map: Some(solved),
             parent: 0,
             movement: Movement::No,
-            hash: 0, //TODO
+            hash: 0,
             g: 0,
             h: 0,
             f: 0,
+
         })
     }
 }
