@@ -1,7 +1,8 @@
 extern crate rand;
 use rand::Rng;
+use std::cmp::Ordering;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Movement {
     Up,
     Down,
@@ -10,19 +11,43 @@ pub enum Movement {
     No,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Heuristic {
+    Manhattan,
+    Wrong,
+    Linear,
+    Composit,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Point {
     pub x: usize,
     pub y: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Map {
     pub content: Vec<usize>,
     pub pos: Point,
     pub size: usize,
     pub costs: Vec<usize>,
 }
+/*
+fn h_wrong(map: &Map, old: Option<&Map>, solved: &Map) {
+    let mut res = Vec::<usize>::new();
+
+    if old.is_none() [
+        for (i, value) in self.content.iter().enumerate() {
+            res.push(if *value == solved.content[i] {0} else {2});
+        }
+    } else {
+        let pos = map.pos;
+        
+
+    }
+    res
+}
+*/
 
 impl Map {
     pub fn new(content: Vec<usize>, pos: Point, size: usize, costs: Vec<usize>) -> Map {
@@ -34,17 +59,18 @@ impl Map {
         }
     }
 
-    pub fn get_costs(&self, old: Option<&Map>, solved: &Map) -> Vec<usize> {
+    pub fn get_costs(&self, old: Option<&Map>, solved: &Map, func: Heuristic) -> Vec<usize> {
         let mut res = Vec::<usize>::new();
 
+        println!("{:#?}", self.costs);
         for (i, value) in self.content.iter().enumerate() {
-            res.push(if *value == solved.content[i] {0} else {1});
+            res.push(if *value == solved.content[i] {0} else {2});
         }
         res
     }
 
     pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {
-        self.get_costs(old, solved).iter().fold(0, |acc, &x| acc + x)
+        self.get_costs(old, solved, Heuristic::Wrong).iter().fold(0, |acc, &x| acc + x)
     }
     
     pub fn child(&mut self, movement: &Movement) {
@@ -161,12 +187,12 @@ impl Map {
             size: size,
             costs: (0..(size * size)).collect(),
         };
-        res.costs = res.get_costs(None, solved);
+        res.costs = res.get_costs(None, solved, Heuristic::Wrong);
         res
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Node {
     pub map: Option<Map>,
     pub parent: usize,
@@ -229,5 +255,17 @@ impl Node {
             f: 0,
 
         })
+    }
+}
+
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Node) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Node {
+    fn cmp(&self, other: &Node) -> Ordering {
+        self.f.cmp(&other.f)
     }
 }

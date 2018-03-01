@@ -22,32 +22,53 @@ fn get_childs(node: &mut lib::Node, solved: &lib::Map, index: usize) -> Vec<lib:
     to_explore.iter().map(|dir| node.child(*dir, index, solved)).collect()
 }
 
-fn main() {
-    let mut node = lib::Node::gen(4);
-    //let mut openl = Vec::<lib::Node>::new();
-    let mut closel = Vec::<lib::Node>::new();
-    let solved = node.1.map.unwrap();
+fn push_sorted(mut list: Vec<lib::Node>, mut to_push: Vec<lib::Node>) -> Vec<lib::Node> {
+    if list.len() == 0 {
+        list.push(to_push.pop().unwrap());
+    }
 
-    
-    solved.display();
-    println!("\n");
-    let mut childs = get_childs(&mut node.0, &solved, 0);
-    childs.iter().for_each(|x| {
-        let map = x.map.as_ref().unwrap();
-        map.display();
-        println!("");
-    });
-    println!("\n");
-    let mut childs2 = get_childs(&mut childs[1], &solved, 1);
-    childs2.iter().for_each(|x| {
-        let map = x.map.as_ref().unwrap();
-        map.display();
-        println!("");
-    });
-    closel.push(node.0);
+    let len = to_push.len();
+
+    for _ in 0..len {
+        let node = to_push.pop().unwrap();
+        let index = list.binary_search(&node).unwrap_or_else(|e| e);
+
+        list.insert(index, node);
+    }
+    list
+}
+
+fn main() {
+    let nodes = lib::Node::gen(3);
+    let solved = nodes.1.map.unwrap();
+    let mut node = nodes.0;
+    let mut openl = Vec::<lib::Node>::new();
+    let mut closel = Vec::<lib::Node>::new();
+
+    let map = node.map.take().unwrap();
+    map.display();
     /*
-    while closel.last().unwrap().f > 0 {
-        
+    let childs = get_childs(&mut node, &solved, 0);
+
+    closel.push(node);
+    openl = push_sorted(openl, childs);
+    while closel.last().unwrap().h > 0 {
+        node = openl.remove(0);
+        let childs = get_childs(&mut node, &solved, closel.len());
+
+        closel.push(node);
+        openl = push_sorted(openl, childs);
+        println!("{:4} - {:4} - {:4}", closel.last().unwrap().f, closel.last().unwrap().h, closel.last().unwrap().g);
+    }
+    let mut i = closel.len();
+    let mut last = closel.pop().unwrap();
+    while i > 0 {
+        let last_map = last.map.take().unwrap();
+
+        last_map.display();
+        println!("\n");
+        i = last.parent;
+        last = closel.remove(i);
     }
     */
 }
