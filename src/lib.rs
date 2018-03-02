@@ -32,22 +32,27 @@ pub struct Map {
     pub size: usize,
     pub costs: Vec<usize>,
 }
-/*
-fn h_wrong(map: &Map, old: Option<&Map>, solved: &Map) {
-    let mut res = Vec::<usize>::new();
 
-    if old.is_none() [
-        for (i, value) in self.content.iter().enumerate() {
-            res.push(if *value == solved.content[i] {0} else {2});
+fn h_wrong(map: &Map, old: Option<&Map>, solved: &Map) -> Vec<usize> {
+    match old {
+        Some(_) => {
+            let unwrappedOld = old.unwrap();
+            let pos = map.pos.x + map.pos.y * map.size;
+            let mut res = unwrappedOld.costs.clone();
+
+            res[pos] = if res[pos] == solved.content[pos] {0} else {2};
+            res
+        },
+        None => {
+            let mut res = Vec::<usize>::new();
+
+            for (i, value) in map.content.iter().enumerate() {
+                res.push(if *value == solved.content[i] {0} else {2});
+            }
+            res
         }
-    } else {
-        let pos = map.pos;
-        
-
     }
-    res
 }
-*/
 
 impl Map {
     pub fn new(content: Vec<usize>, pos: Point, size: usize, costs: Vec<usize>) -> Map {
@@ -60,13 +65,9 @@ impl Map {
     }
 
     pub fn get_costs(&self, old: Option<&Map>, solved: &Map, func: Heuristic) -> Vec<usize> {
-        let mut res = Vec::<usize>::new();
-
-        println!("{:#?}", self.costs);
-        for (i, value) in self.content.iter().enumerate() {
-            res.push(if *value == solved.content[i] {0} else {2});
+        match func {
+            _ => h_wrong(self, old, solved)
         }
-        res
     }
 
     pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {

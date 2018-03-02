@@ -45,9 +45,6 @@ fn main() {
     let mut openl = Vec::<lib::Node>::new();
     let mut closel = Vec::<lib::Node>::new();
 
-    let map = node.map.take().unwrap();
-    map.display();
-    /*
     let childs = get_childs(&mut node, &solved, 0);
 
     closel.push(node);
@@ -70,5 +67,4 @@ fn main() {
         i = last.parent;
         last = closel.remove(i);
     }
-    */
 }
