@@ -5,3 +5,4 @@ authors = ["Hugo Sabourin <hsabouri@student.42.fr>"]
 
 [dependencies]
 rand = "0.4"
+clap = "2.30.0"

@@ -1,5 +1,10 @@
+extern crate clap;
+use clap::{Arg, App};
+
 extern crate rand;
 mod lib;
+mod error;
+mod parser;
 
 fn get_childs(node: &mut lib::Node, solved: &lib::Map, index: usize) -> Vec<lib::Node> {
     let map = node.map.take().unwrap(); 
@@ -39,6 +44,41 @@ fn push_sorted(mut list: Vec<lib::Node>, mut to_push: Vec<lib::Node>) -> Vec<lib
 }
 
 fn main() {
+    let matches = App::new("npuzzle")
+        .version("1.0")
+        .about("Solves n-puzzles")
+        .author("hsabouri")
+        .arg(Arg::with_name("FILE")
+            .help("Input file containing puzzle to solve")
+            .index(1))
+        .arg(Arg::with_name("size")
+            .help("Define size of input puzzle")
+            .short("s")
+            .long("size"))
+        .arg(Arg::with_name("H")
+            .help("Heuristic chosen to solve the puzzle")
+            .short("H")
+            .long("heuristic"))
+        .arg(Arg::with_name("v")
+            .help("Sets the level verbosity")
+            .short("v")
+            .multiple(true))
+        .get_matches();
+
+    let filename = matches.value_of("FILE");
+
+    let (mut node, solved) = match filename {
+        None => {
+            let size = matches.value_of("size").unwrap_or("3").parse::<usize>().unwrap();
+
+            if size < 3 {
+                error::exit("Size must be equals or higher than 3.");
+            }
+            lib::Node::gen(size)
+        },
+        Some(_) => parser::parse(filename.unwrap())
+    };
+    /*
     let nodes = lib::Node::gen(3);
     let solved = nodes.1.map.unwrap();
     let mut node = nodes.0;
@@ -67,4 +107,5 @@ fn main() {
         i = last.parent;
         last = closel.remove(i);
     }
+    */
 }
