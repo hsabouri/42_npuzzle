@@ -8,11 +8,8 @@ use error;
 pub fn parse(filename: &str) -> (lib::Node, lib::Node) {
     match File::open(filename) {
         Ok(v) => {
-            let mut buff = BufReader::new(&v);
-            for line in buff.lines() {
-                let l = line.unwrap();
-                println!("{}", l); 
-            }
+            let buff = BufReader::new(&v);
+            let lines: Vec<String> = buff.lines().map(|line| line.unwrap()).collect();
         },
         Err(e) => error::exit("Could not open file"),
     };
