@@ -1,8 +1,7 @@
 [package]
-name = "graph_tests"
+name = "npuzzle"
 version = "0.1.0"
 authors = ["Hugo Sabourin <hsabouri@student.42.fr>"]
 
 [dependencies]
 rand = "0.4"
-clap = "2.30.0"
