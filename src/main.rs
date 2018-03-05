@@ -68,20 +68,16 @@ fn main() {
     let filename = matches.value_of("FILE");
 
     let res = match filename {
-        None => {
-            let size = matches.value_of("size").unwrap_or("3").parse::<usize>().unwrap();
-
-            if size < 3 {
-                error::exit("Size must be equals or higher than 3.");
-            }
-            Ok(lib::Node::gen(size))
-        },
+        None => Err(format!("No file given")),
         Some(_) => parser::parse(filename.unwrap())
     };
 
     match res {
         Err(e) => println!("\x1b[31mError:\x1b[0m {}", e),
-        Ok(v) => {}
+        Ok(v) => {
+            println!("Map size: {}\n", v.size);
+            v.display();
+        }
     }
     /*
     let nodes = lib::Node::gen(3);
