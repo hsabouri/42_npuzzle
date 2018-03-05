@@ -67,17 +67,22 @@ fn main() {
 
     let filename = matches.value_of("FILE");
 
-    let (mut node, solved) = match filename {
+    let res = match filename {
         None => {
             let size = matches.value_of("size").unwrap_or("3").parse::<usize>().unwrap();
 
             if size < 3 {
                 error::exit("Size must be equals or higher than 3.");
             }
-            lib::Node::gen(size)
+            Ok(lib::Node::gen(size))
         },
         Some(_) => parser::parse(filename.unwrap())
     };
+
+    match res {
+        Err(e) => println!("\x1b[31mError:\x1b[0m {}", e),
+        Ok(v) => {}
+    }
     /*
     let nodes = lib::Node::gen(3);
     let solved = nodes.1.map.unwrap();
