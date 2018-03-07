@@ -56,20 +56,18 @@ pub struct Point {
 pub struct Map {
     pub content: Vec<u16>,
     pub pos: Point,
-    pub costs: Option<Vec<usize>>,
+    pub costs: Option<Vec<u16>>,
 }
 
-fn from_index_to_value(index: u16) -> Option<u16> {
+fn from_index_to_value(index: u16) -> u16 {
     let zero_pos = unsafe {SOLVER.zero_pos};
 
     if index < zero_pos {
-        Some(index + 1)
+        index + 1
     } else if index > zero_pos {
-        Some(index)
-    } else if index == zero_pos {
-        Some(0)
+        index
     } else {
-        None
+        0
     }
 }
 
@@ -108,7 +106,7 @@ impl Map {
         Map {content: solved, pos: pos, costs: None}
     }
 
-    pub fn new(content: Vec<u16>, pos: Point, costs: Option<Vec<usize>>) -> Map {
+    pub fn new(content: Vec<u16>, pos: Point, costs: Option<Vec<u16>>) -> Map {
         Map {
             content: content,
             pos: pos,
@@ -148,13 +146,34 @@ impl Map {
         };
     }
 
+    fn heuristic_naive(&mut self, mov: &Movement) {
+        // TODO: Testing
+        let size = unsafe {SOLVER.size};
+        let to_look_at = match *mov {
+            Movement::Up => self.pos.x + (self.pos.y + 1) * size,
+            Movement::Down => self.pos.x + (self.pos.y - 1) * size,
+            Movement::Left => self.pos.x + 1 + self.pos.y * size,
+            Movement::Right => self.pos.x - 1 + self.pos.y * size,
+            Movement::No => self.pos.x + self.pos.y * size,
+        };
+        let solved_value = from_index_to_value(to_look_at);
+        let value = self.content[to_look_at as usize];
+        let mut costs = self.costs.take().unwrap();
+
+        if value == solved_value {
+            costs[value as usize] = 0;
+        } else {
+            costs[value as usize] = 1;
+        }
+    }
+
     fn first_heuristic_naive(&self) -> Vec<u16> {
         let mut res = Vec::<u16>::new();
 
         for (index, value) in self.content.iter().enumerate() {
             let solved_value = from_index_to_value(index as u16);
 
-            if solved_value.unwrap() == *value {
+            if solved_value == *value {
                 res.push(0);
             } else {
                 res.push(1);
@@ -393,9 +412,10 @@ pub fn create_random(size: u16) -> Result<(Node, Node), &'static str> {
 }
 
 pub fn solve(map_node: Node, solved_node: Node) {
-    if let Some(map) = map_node.map {
+    if let Some(mut map) = map_node.map {
         map.display();
         map.first_get_costs(Heuristic::Manhattan);
+        
 
         println!("{:#?}", map); 
     }
