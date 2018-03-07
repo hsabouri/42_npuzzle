@@ -1,8 +1,10 @@
 [package]
-name = "npuzzle"
+name = "LibNpuzzle"
 version = "0.1.0"
-authors = ["Hugo Sabourin <hsabouri@student.42.fr>"]
+authors = ["Hugo Sabourin <hsabouri@student.42.fr>", "William Escande <wescande@student.42.fr>"]
 
 [dependencies]
-rand = "0.4"
+colored = "1.6"
+rand = "0.4.2"
+rand_derive = "0.3.1"
 clap = "2.30.0"

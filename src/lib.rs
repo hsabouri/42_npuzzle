@@ -1,8 +1,24 @@
 extern crate rand;
+#[macro_use]
+extern crate rand_derive;
+extern crate colored;
+
+mod parser;
+mod generator;
+
 use rand::Rng;
 use std::cmp::Ordering;
+use colored::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct solver {
+    size: u16
+}
+
+static mut SOLVER: solver = solver {
+    size: 0
+};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand)]
 pub enum Movement {
     Up,
     Down,
@@ -21,176 +37,165 @@ pub enum Heuristic {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Point {
-    pub x: usize,
-    pub y: usize,
+    pub x: u16,
+    pub y: u16,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Map {
-    pub content: Vec<usize>,
+    pub content: Vec<u16>,
     pub pos: Point,
-    pub size: usize,
-    pub costs: Vec<usize>,
+    pub costs: Option<Vec<usize>>,
 }
 
-fn h_wrong(map: &Map, old: Option<&Map>, solved: &Map) -> Vec<usize> {
-    match old {
-        Some(_) => {
-            let unwrappedOld = old.unwrap();
-            let pos = map.pos.x + map.pos.y * map.size;
-            let mut res = unwrappedOld.costs.clone();
+// fn h_wrong(map: &Map, old: Option<&Map>, solved: &Map) -> Vec<u16> {
+//     match old {
+//         Some(_) => {
+//             let unwrappedOld = old.unwrap();
+//             let pos = map.pos.x + map.pos.y * map.size;
+//             let mut res = unwrappedOld.costs.clone();
 
-            res[pos] = if res[pos] == solved.content[pos] {0} else {2};
-            res
-        },
-        None => {
-            let mut res = Vec::<usize>::new();
+//             res[pos] = if res[pos] == solved.content[pos] {0} else {2};
+//             res
+//         },
+//         None => {
+//             let mut res = Vec::<u16>::new();
 
-            for (i, value) in map.content.iter().enumerate() {
-                res.push(if *value == solved.content[i] {0} else {2});
-            }
-            res
-        }
+//             for (i, value) in map.content.iter().enumerate() {
+//                 res.push(if *value == solved.content[i] {0} else {2});
+//             }
+//             res
+//         }
+//     }
+// }
+fn spiral(w: i16, h: i16, x: i16, y: i16) -> i16 {
+    println!("W {} | H {} | x {} | y {}", w ,h ,x ,y);
+    if y == 0 {
+        x + 1
+    } else {
+        w + spiral(h - 1, w, y - 1, w - x - 1)
     }
 }
 
 impl Map {
-    pub fn new(content: Vec<usize>, pos: Point, size: usize, costs: Vec<usize>) -> Map {
+    fn shuffle(&mut self) {
+        let mut rng = rand::thread_rng();
+        for _ in 0..500 {
+            let mov: Movement = rng.gen();
+            println!("{:?}", mov);
+        }
+        // TODO shuffle here
+
+    }
+
+    pub fn new_random(size: u16) -> Map {
+        let (solved, pos) = generator::get_solved(size);
+        let mut map = Map {content: solved, pos: pos, costs: None};
+        map.shuffle();
+        map
+    }
+
+    pub fn new_solved(size: u16) -> Map {
+        let (solved, pos) = generator::get_solved(size);
+        Map {content: solved, pos: pos, costs: None}
+    }
+
+    pub fn new(content: Vec<u16>, pos: Point, costs: Option<Vec<usize>>) -> Map {
         Map {
             content: content,
             pos: pos,
-            size: size,
             costs: costs,
         }
     }
 
-    pub fn get_costs(&self, old: Option<&Map>, solved: &Map, func: Heuristic) -> Vec<usize> {
-        match func {
-            _ => h_wrong(self, old, solved)
-        }
-    }
+    // pub fn get_costs(&self, old: Option<&Map>, solved: &Map, func: Heuristic) -> Vec<u16> {
+    //     match func {
+    //         _ => h_wrong(self, old, solved)
+    //     }
+    // }
 
-    pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {
-        self.get_costs(old, solved, Heuristic::Wrong).iter().fold(0, |acc, &x| acc + x)
-    }
+    // pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {
+    //     self.get_costs(old, solved, Heuristic::Wrong).iter().fold(0, |acc, &x| acc + x as usize)
+    // }
     
-    pub fn child(&mut self, movement: &Movement) {
-        self.content.swap(self.pos.x + self.pos.y * self.size, {
-            match *movement {
-                Movement::Down => self.pos.x + (self.pos.y - 1) * self.size,
-                Movement::Up => self.pos.x + (self.pos.y + 1) * self.size,
-                Movement::Right => (self.pos.x - 1) + self.pos.y * self.size,
-                Movement::Left => (self.pos.x + 1) + self.pos.y * self.size,
-                Movement::No => self.pos.x + self.pos.y * self.size,
-            }
-        });
+    // pub fn child(&mut self, movement: &Movement) {
+    //     self.content.swap(self.pos.x + self.pos.y * unsafe {SOLVER.size}, {
+    //         match *movement {
+    //             Movement::Down => self.pos.x + (self.pos.y - 1) * unsafe {SOLVER.size},
+    //             Movement::Up => self.pos.x + (self.pos.y + 1) * unsafe {SOLVER.size},
+    //             Movement::Right => (self.pos.x - 1) + self.pos.y * unsafe {SOLVER.size},
+    //             Movement::Left => (self.pos.x + 1) + self.pos.y * unsafe {SOLVER.size},
+    //             Movement::No => self.pos.x + self.pos.y * unsafe {SOLVER.size}
+    //         }
+    //     });
 
-        self.pos = match *movement {
-            Movement::Right => Point {x: self.pos.x - 1, y: self.pos.y},
-            Movement::Left => Point {x: self.pos.x + 1, y: self.pos.y},
-            Movement::Down => Point {x: self.pos.x, y: self.pos.y - 1},
-            Movement::Up => Point {x: self.pos.x, y: self.pos.y + 1},
-            Movement::No => Point {x: self.pos.x, y: self.pos.y},
-        };
-    }
+    //     self.pos = match *movement {
+    //         Movement::Right => Point {x: self.pos.x - 1, y: self.pos.y},
+    //         Movement::Left => Point {x: self.pos.x + 1, y: self.pos.y},
+    //         Movement::Down => Point {x: self.pos.x, y: self.pos.y - 1},
+    //         Movement::Up => Point {x: self.pos.x, y: self.pos.y + 1},
+    //         Movement::No => Point {x: self.pos.x, y: self.pos.y},
+    //     };
+    // }
 
-    pub fn get_solved(side: usize) -> Map {
-        let (mut x, mut y) = (
-            match side % 2 {
-                0 => side / 2,
-                _ => side / 2 - 1,
-            },
-            match side % 2 {
-                0 => side / 2 + 1,
-                _ => side / 2 - 1,
-            }
-        );
-        let size = side * side;
-        let mut map: Vec<usize> = (0..size).map(|_| 0).collect();
-        let mut direction: Movement = match side % 2 {
-            0 => Movement::Up,
-            _ => Movement::Down,
-        };
-        let mut n = size - 1;
+    // pub fn get_solved(side: i16) -> Map {
+    //     let mut map: Vec<usize> = Vec::new();
+    //     let size = side * side;
+    //     for x in 0..side {
+    //         for y in 0..side {
+    //             match spiral(side as i16, side as i16, y, x) {
+    //                 var if var == size => map.push(0),
+    //                 var     => map.push(var as usize)
+    //             };
+    //         }
+    //     }
 
-        for turn in 0..(side * 2 - 2) {
-            let to_push: usize = {
-                if turn == 0 || turn == 1 {
-                    2
-                } else if turn == (side * 2 - 3)  {
-                    side - 1 
-                } else {
-                    (turn + 1) / 2 + 1
-                }
-            };
-            for _ in 0..to_push {
-                x = match direction {
-                    Movement::Left => x - 1,
-                    Movement::Right => x + 1,
-                    _ => x,
-                };
-                y = match direction {
-                    Movement::Up => y - 1,
-                    Movement::Down=> y + 1,
-                    _ => y,
-                };
-                map[x + y * side] = n;
-                n = n - 1;
-            }
-            direction = match direction {
-                Movement::Up => Movement::Left,
-                Movement::Left => Movement::Down,
-                Movement::Down => Movement::Right,
-                Movement::Right => Movement::Up,
-                _ => Movement::No,
-            };
-        }
-        Map {
-            content: map,
-            pos: Point {
-                x: match side % 2 {
-                    0 => side / 2 - 1,
-                    _ => side / 2,
-                },
-                y: side / 2
-            },
-            size: side,
-            costs: (0..(size - 1)).map(|_| 0).collect(),
-        }
-    }
+    //     Map {
+    //         content: map,
+    //         pos: Point {
+    //             x: match side % 2 {
+    //                 0 => side as usize / 2 - 1,
+    //                 _ => side as usize / 2,
+    //             },
+    //             y: side as usize / 2
+    //         },
+    //         size: side as usize,
+    //         costs: (0..(size - 1)).map(|_| 0).collect(),
+    //     }
+    // }
 
     pub fn display(&self) {
-        for y in 0..self.size {
+        for y in 0..unsafe {SOLVER.size} {
             let mut to_display = String::from("");
-            for x in 0..self.size {
-                to_display.push_str(format!("{:4}", self.content[x + y * self.size]).as_str());
+            for x in 0..unsafe {SOLVER.size} {
+                to_display.push_str(format!("{:4}", self.content[(x + y * unsafe {SOLVER.size}) as usize]).as_str());
             }
             println!("{}\n", to_display);
         }
     }
 
-    pub fn gen(size: usize, solved: &Map) -> Map {
-        let mut topush: Vec<usize> = (0..(size * size)).collect();
-        let mut pos = Point {x: 0, y: 0};
-        let content: Vec<usize> = (0..(size * size)).map(|map_id: usize| {
-            let id = rand::thread_rng().gen_range(0, topush.len());
-            let res = topush[id];
+    // pub fn gen(size: usize, solved: &Map) -> Map {
+    //     let mut topush: Vec<usize> = (0..(size * size)).collect();
+    //     let mut pos = Point {x: 0, y: 0};
+    //     let content: Vec<usize> = (0..(size * size)).map(|map_id: usize| {
+    //         let id = rand::thread_rng().gen_range(0, topush.len());
+    //         let res = topush[id];
 
-            topush.remove(id);
-            if res == 0 {
-                pos = Point {x: map_id % size, y: map_id / size};
-            }
-            res
-        }).collect();
-        let mut res = Map {
-            content: content,
-            pos: pos,
-            size: size,
-            costs: (0..(size * size)).collect(),
-        };
-        res.costs = res.get_costs(None, solved, Heuristic::Wrong);
-        res
-    }
+    //         topush.remove(id);
+    //         if res == 0 {
+    //             pos = Point {x: map_id % size, y: map_id / size};
+    //         }
+    //         res
+    //     }).collect();
+    //     let mut res = Map {
+    //         content: content,
+    //         pos: pos,
+    //         size: size,
+    //         costs: (0..(size * size)).collect(),
+    //     };
+    //     res.costs = res.get_costs(None, solved, Heuristic::Wrong);
+    //     res
+    // }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -217,45 +222,68 @@ impl Node {
         }
     }
 
-    pub fn child(&mut self, movement: Movement, parent: usize, solved: &Map) -> Node {
-        let mut map = self.map.clone().unwrap();
+    // pub fn child(&mut self, movement: Movement, parent: usize, solved: &Map) -> Node {
+    //     let mut map = self.map.clone().unwrap();
 
-        map.child(&movement);
-        let h = map.get_cost(None, &solved);
+    //     map.child(&movement);
+    //     let h = map.get_cost(None, &solved);
+    //     Node {
+    //         map: Some(map),
+    //         parent: parent,
+    //         movement: movement,
+    //         hash: 0, //TODO
+    //         g: self.g + 1,
+    //         h: h,
+    //         f: self.g + 1 + h,
+    //     }
+    // }
+
+    // pub fn gen(size: i16) -> (Node, Node) {
+    //     let solved = Map::get_solved(size);
+    //     solved.display();
+    //     let map = Map::gen(size as usize, &solved);
+    //     let h = map.get_cost(None, &solved);
+            
+    //     (Node {
+    //         map: Some(map),
+    //         parent: 0,
+    //         movement: Movement::No,
+    //         hash: 0,
+    //         g: 0,
+    //         h: h,
+    //         f: h,
+    //     }, Node {
+    //          map: Some(solved),
+    //         parent: 0,
+    //         movement: Movement::No,
+    //         hash: 0,
+    //         g: 0,
+    //         h: 0,
+    //         f: 0,
+
+    //     })
+    // }
+    pub fn new_from_map(map: Map) -> Node {
         Node {
             map: Some(map),
-            parent: parent,
-            movement: movement,
-            hash: 0, //TODO
-            g: self.g + 1,
-            h: h,
-            f: self.g + 1 + h,
-        }
-    }
-
-    pub fn gen(size: usize) -> (Node, Node) {
-        let solved = Map::get_solved(size);
-        let map = Map::gen(size, &solved);
-        let h = map.get_cost(None, &solved);
-            
-        (Node {
-            map: Some(map),
-            parent: 0,
-            movement: Movement::No,
-            hash: 0,
-            g: 0,
-            h: h,
-            f: h,
-        }, Node {
-             map: Some(solved),
             parent: 0,
             movement: Movement::No,
             hash: 0,
             g: 0,
             h: 0,
-            f: 0,
-
-        })
+            f: 0
+        }
+    }
+    pub fn new_solved() -> Node {
+        Node {
+            map: Some(Map::new_solved(unsafe {SOLVER.size})),
+            parent: 0,
+            movement: Movement::No,
+            hash: 0,
+            g: 0,
+            h: 0,
+            f: 0
+        }
     }
 }
 
@@ -269,4 +297,23 @@ impl Ord for Node {
     fn cmp(&self, other: &Node) -> Ordering {
         self.f.cmp(&other.f)
     }
+}
+
+pub fn parse(filename: &str) -> Result<(Node, Node), &'static str> {
+    let (map, size) = match parser::parse(filename) {
+        Ok(x) => x,
+        Err(msg) => {println!("{}", msg.red()); return Err("Failed to parse")},
+    };
+    unsafe {SOLVER.size = size;}
+    Ok((Node::new_from_map(map), Node::new_solved()))
+}
+
+pub fn create_random(size: u16) -> Result<(Node, Node), &'static str> {
+    let map = Map::new_random(size);
+    unsafe {SOLVER.size = size;}
+    Ok((Node::new_from_map(map), Node::new_solved()))
+}
+
+pub fn solve(map: Node, solved: Node) {
+
 }
