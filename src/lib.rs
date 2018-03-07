@@ -165,27 +165,24 @@ impl Map {
     
     fn first_heuristic_manhattan(&self) -> Vec<u16> {
         let mut res = Vec::<u16>::new();
+        let size = unsafe {SOLVER.size};
 
         for (index, value) in self.content.iter().enumerate() {
-            let solved_value = from_value_to_index(*value as u16);
+            let solved_index = from_value_to_index(*value as u16);
+            let value_pos = Point {x: index as u16 % size, y: index as u16 / size};
+            let solved_pos = Point {x: solved_index as u16 % size, y: solved_index as u16 / size};
 
-            /*
-            if solved_value == *value {
-                res.push(0);
-            } else {
-                res.push(1);
-            }
-            */ 
+            res.push(((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16);
         }
         res
     }
 
-    pub fn first_get_costs(&self, func: Heuristic) -> Vec<u16> {
-        match func {
+    pub fn first_get_costs(&mut self, func: Heuristic) {
+        self.costs = Some(match func {
             //Heuristic::Linear => self.heuristic_linear(solved),
             Heuristic::Naive => self.first_heuristic_naive(),
             _ => self.first_heuristic_manhattan(),
-        }
+        });
     }
 
     // pub fn get_costs(&self, old: Option<&Map>, solved: &Map, func: Heuristic) -> Vec<u16> {
@@ -399,6 +396,8 @@ pub fn solve(map_node: Node, solved_node: Node) {
     if let Some(map) = map_node.map {
         map.display();
         map.first_get_costs(Heuristic::Manhattan);
+
+        println!("{:#?}", map); 
     }
     println!("Result will be:");
     if let Some(map) = solved_node.map {
