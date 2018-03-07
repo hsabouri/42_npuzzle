@@ -1,0 +1,90 @@
+
+                    ┌───────┐                  ┌───────┐                   ┌────┐
+                    │Thread1│                  │Thread2│                   │Main│
+                    └───┬───┘                  └───┬───┘                   └─┬──┘
+                        │                          │                         │
+                        │                          │                         │
+                        │                          │                         │
+                        │                          │                         │────┐
+                        │                          │                         │    │ Pops Node from openlist
+                        │                          │                         │<───┘
+                        │                          │                         │
+                        │                     Send Node                      │
+                        │<────────────────────────────────────────────────────
+                        │                          │                         │
+                        ─ ─ ┐                      │                         │
+                            | Computes childs costs│                         │
+                        < ─ ┘                      │                         │
+                        │                          │                         │
+                        │                          │                         │────┐
+                        │                          │                         │    │ Pops Node from openlist
+                        │                          │                         │<───┘
+                        │                          │                         │
+                        │                          │        Send Node        │
+                        │                          │<─────────────────────────
+                        │                          │                         │
+                        │                          ─ ─ ┐
+                        │                              | Computes childs costs
+                        │                          < ─ ┘
+                        │                          │                         │
+                        │                Send Childs and Node                │
+                        │────────────────────────────────────────────────────>
+                        │                          │                         │
+                        │                          │                         │─ ─ ┐
+                        │                          │                         │    | Sort Childs in Openlist +
+                        │                          │                         │< ─ ┘ Push Node to Closelist
+                        │                          │                         │
+                        │                          │                         │
+                        │                          │                         │────┐
+                        │                          │                         │    │ Pops Node from openlist
+                        │                          │                         │<───┘
+                        │                          │                         │
+                        │                     Send Node                      │
+                        │<────────────────────────────────────────────────────
+                        │                          │                         │
+                        ─ ─ ┐                      │                         │
+                            | Computes childs costs│                         │
+                        < ─ ┘                      │                         │
+                        │                          │                         │
+                        │                Send Childs and Node                │
+                        │────────────────────────────────────────────────────>
+                        │                          │                         │
+                        │                          │                         │────┐
+                        │                          │                         │    │ One of the child is the solved puzzle!
+                        │                          │                         │<───┘
+                        │                          │                         │
+                        │                        STOP                        │
+                        │<────────────────────────────────────────────────────
+                        │                          │                         │
+                        │                          │          STOP           │
+                        │                          │<─────────────────────────
+                    ┌───┴───┐                  ┌───┴───┐                   ┌─┴──┐
+                    │Thread1│                  │Thread2│                   │Main│
+                    └───────┘                  └───────┘                   └────┘
+
+@startuml
+
+participant Thread1
+participant Thread2
+participant Main
+
+group Loop
+	Main -> Main : Pops Node from openlist
+	Main -> Thread1 : Send Node
+	Thread1 --> Thread1 : Computes childs costs
+	Main -> Main : Pops Node from openlist
+	Main -> Thread2 : Send Node
+	Thread2 --> Thread2 : Computes childs costs
+	Thread1 -> Main : Send Childs and Node
+	Main --> Main : Sort Childs in Openlist + \nPush Node to Closelist
+
+Main -> Main : Pops Node from openlist
+Main -> Thread1 : Send Node
+Thread1 --> Thread1 : Computes childs costs
+Thread1 -> Main : Send Childs and Node
+Main -> Main : One of the child is the solved puzzle!
+Main -> Thread1 : STOP
+Main -> Thread2 : STOP
+
+
+@enduml
