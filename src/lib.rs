@@ -77,6 +77,11 @@ fn spiral(w: i16, h: i16, x: i16, y: i16) -> i16 {
 
 impl Map {
     fn shuffle(&mut self) {
+        let mut rng = rand::thread_rng();
+        for _ in 0..500 {
+            let mov: Movement = rng.gen();
+            println!("{:?}", mov);
+        }
         // TODO shuffle here
 
     }
