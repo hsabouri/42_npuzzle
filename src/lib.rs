@@ -11,12 +11,23 @@ use std::cmp::Ordering;
 use colored::*;
 
 pub struct Solver {
-    size: u16
+    size: u16,
+    zero_pos: u16
 }
 
 static mut SOLVER: Solver = Solver {
-    size: 0
+    size: 0,
+    zero_pos: 0
 };
+
+fn init_solver(size: u16) {
+    unsafe {SOLVER.size = size;}
+    let zero_pos = match size % 2 {
+        0 => size / 2 - 1 + (size / 2) * size,
+        _ => size / 2 + (size / 2) * size,
+    };
+    unsafe {SOLVER.zero_pos = zero_pos};
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand)]
 pub enum Movement {
@@ -49,11 +60,7 @@ pub struct Map {
 }
 
 fn from_index_to_value(index: u16) -> Option<u16> {
-    let size = unsafe {SOLVER.size};
-    let zero_pos = match size % 2 {
-        0 => size / 2 - 1 + (size / 2) * size,
-        _ => size / 2 + (size / 2) * size,
-    };
+    let zero_pos = unsafe {SOLVER.zero_pos};
 
     if index < zero_pos {
         Some(index + 1)
@@ -349,12 +356,13 @@ pub fn parse(filename: &str) -> Result<(Node, Node), &'static str> {
         Ok(x) => x,
         Err(msg) => {println!("{}", msg.red()); return Err("Failed to parse")},
     };
-    unsafe {SOLVER.size = size;}
+    init_solver(size);
     Ok((Node::new_from_map(map), Node::new_solved()))
 }
 
 pub fn create_random(size: u16) -> Result<(Node, Node), &'static str> {
     unsafe {SOLVER.size = size;}
+    init_solver(size);
     let map = Map::new_random(size);
     Ok((Node::new_from_map(map), Node::new_solved()))
 }
