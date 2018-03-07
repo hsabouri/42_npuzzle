@@ -10,11 +10,11 @@ use rand::Rng;
 use std::cmp::Ordering;
 use colored::*;
 
-pub struct solver {
+pub struct Solver {
     size: u16
 }
 
-static mut SOLVER: solver = solver {
+static mut SOLVER: Solver = Solver {
     size: 0
 };
 
@@ -68,24 +68,16 @@ pub struct Map {
 //         }
 //     }
 // }
-fn spiral(w: i16, h: i16, x: i16, y: i16) -> i16 {
-    println!("W {} | H {} | x {} | y {}", w ,h ,x ,y);
-    if y == 0 {
-        x + 1
-    } else {
-        w + spiral(h - 1, w, y - 1, w - x - 1)
-    }
-}
 
 impl Map {
     fn shuffle(&mut self) {
         let mut rng = rand::thread_rng();
-        for _ in 0..500 {
-            let mov: Movement = rng.gen();
-            println!("{:?}", mov);
+        for _ in 0..1000 {
+            let random_move: Movement = rng.gen();
+            if self.can_move(random_move) {
+                self.do_move(random_move);
+            }
         }
-        // TODO shuffle here
-
     }
 
     pub fn new_random(size: u16) -> Map {
@@ -108,6 +100,38 @@ impl Map {
         }
     }
 
+    fn can_move(&self, direction: Movement) -> bool {
+        let size = unsafe {SOLVER.size};
+        match direction {
+            Movement::Up => self.pos.y > 0,
+            Movement::Down => self.pos.y < (size - 1),
+            Movement::Left => self.pos.x > 0,
+            Movement::Right => self.pos.x < (size - 1),
+            Movement::No => true,
+        }
+    }
+
+    fn do_move(&mut self, direction: Movement) {
+        let size = unsafe {SOLVER.size};
+        self.content.swap((self.pos.x + self.pos.y * size) as usize,
+        (match direction {
+            Movement::Up => self.pos.x + (self.pos.y - 1) * size,
+            Movement::Down => self.pos.x + (self.pos.y + 1) * size,
+            Movement::Left => (self.pos.x - 1) + self.pos.y * size,
+            Movement::Right => (self.pos.x + 1) + self.pos.y * size,
+            Movement::No => self.pos.x + self.pos.y * size
+        }) as usize
+        );
+
+        self.pos = match direction {
+            Movement::Up => Point {x: self.pos.x, y: self.pos.y - 1},
+            Movement::Down => Point {x: self.pos.x, y: self.pos.y + 1},
+            Movement::Left => Point {x: self.pos.x - 1, y: self.pos.y},
+            Movement::Right => Point {x: self.pos.x + 1, y: self.pos.y},
+            Movement::No => Point {x: self.pos.x, y: self.pos.y},
+        };
+    }
+
     // pub fn get_costs(&self, old: Option<&Map>, solved: &Map, func: Heuristic) -> Vec<u16> {
     //     match func {
     //         _ => h_wrong(self, old, solved)
@@ -117,7 +141,7 @@ impl Map {
     // pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {
     //     self.get_costs(old, solved, Heuristic::Wrong).iter().fold(0, |acc, &x| acc + x as usize)
     // }
-    
+
     // pub fn child(&mut self, movement: &Movement) {
     //     self.content.swap(self.pos.x + self.pos.y * unsafe {SOLVER.size}, {
     //         match *movement {
@@ -243,7 +267,7 @@ impl Node {
     //     solved.display();
     //     let map = Map::gen(size as usize, &solved);
     //     let h = map.get_cost(None, &solved);
-            
+
     //     (Node {
     //         map: Some(map),
     //         parent: 0,
@@ -309,11 +333,18 @@ pub fn parse(filename: &str) -> Result<(Node, Node), &'static str> {
 }
 
 pub fn create_random(size: u16) -> Result<(Node, Node), &'static str> {
-    let map = Map::new_random(size);
     unsafe {SOLVER.size = size;}
+    let map = Map::new_random(size);
     Ok((Node::new_from_map(map), Node::new_solved()))
 }
 
-pub fn solve(map: Node, solved: Node) {
+pub fn solve(map_node: Node, solved_node: Node) {
+    if let Some(map) = map_node.map {
+        map.display();
+    }
+    println!("Result will be:");
+    if let Some(map) = solved_node.map {
+        map.display();
+    }
 
 }

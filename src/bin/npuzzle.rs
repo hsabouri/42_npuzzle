@@ -1,15 +1,14 @@
-#[macro_use]
 extern crate clap;
-extern crate LibNpuzzle;
+extern crate lib_npuzzle;
 extern crate colored;
 
-use LibNpuzzle::*;
+use lib_npuzzle::Node;
 use colored::*;
 use clap::{Arg, App, ArgMatches};
 
 fn init_map(matches: ArgMatches) -> Result<(Node, Node), &'static str> {
     match matches.value_of("FILE") {
-        Some(filename) => Ok(parse(filename)?),
+        Some(filename) => Ok(lib_npuzzle::parse(filename)?),
         None => {
             let size = matches.value_of("SIZE").unwrap_or("3").parse::<u16>().unwrap(); // TODO not an unwrap
             if size > 20 {
@@ -17,7 +16,7 @@ fn init_map(matches: ArgMatches) -> Result<(Node, Node), &'static str> {
             } else if size < 3 {
                 Err("Size must be equals or higher than 3.")
             } else {
-                Ok(create_random(size)?)
+                Ok(lib_npuzzle::create_random(size)?)
             }
         }
     }
@@ -47,6 +46,6 @@ fn main() {
 
     match init_map(matches) {
         Err(msg)    => println!("Failed to init map: {}", msg.red()),
-        Ok((map, solved))     => solve(map, solved)
+        Ok((map, solved))     => lib_npuzzle::solve(map, solved)
     };
 }
