@@ -30,7 +30,7 @@ pub enum Movement {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Heuristic {
     Manhattan,
-    Wrong,
+    Naive,
     Linear,
     Composit,
 }
@@ -48,26 +48,23 @@ pub struct Map {
     pub costs: Option<Vec<usize>>,
 }
 
-// fn h_wrong(map: &Map, old: Option<&Map>, solved: &Map) -> Vec<u16> {
-//     match old {
-//         Some(_) => {
-//             let unwrappedOld = old.unwrap();
-//             let pos = map.pos.x + map.pos.y * map.size;
-//             let mut res = unwrappedOld.costs.clone();
+fn from_index_to_value(index: u16) -> Option<u16> {
+    let size = unsafe {SOLVER.size};
+    let zero_pos = match size % 2 {
+        0 => size / 2 - 1 + (size / 2) * size,
+        _ => size / 2 + (size / 2) * size,
+    };
 
-//             res[pos] = if res[pos] == solved.content[pos] {0} else {2};
-//             res
-//         },
-//         None => {
-//             let mut res = Vec::<u16>::new();
-
-//             for (i, value) in map.content.iter().enumerate() {
-//                 res.push(if *value == solved.content[i] {0} else {2});
-//             }
-//             res
-//         }
-//     }
-// }
+    if index < zero_pos {
+        Some(index + 1)
+    } else if index > zero_pos {
+        Some(index)
+    } else if index == zero_pos {
+        Some(0)
+    } else {
+        None
+    }
+}
 
 impl Map {
     fn shuffle(&mut self) {
@@ -130,6 +127,30 @@ impl Map {
             Movement::Right => Point {x: self.pos.x + 1, y: self.pos.y},
             Movement::No => Point {x: self.pos.x, y: self.pos.y},
         };
+    }
+
+    fn first_heuristic_naive(&self) -> Vec<u16> {
+        let mut res = Vec::<u16>::new();
+
+        for (index, value) in self.content.iter().enumerate() {
+            let solved_value = from_index_to_value(index as u16);
+
+            if solved_value.unwrap() == *value {
+                res.push(0);
+            } else {
+                res.push(10);
+            }
+        }
+        res
+    }
+
+    pub fn first_get_costs(&self, func: Heuristic) -> Vec<u16> {
+        match func {
+            //Heuristic::Linear => self.heuristic_linear(solved),
+            Heuristic::Naive => self.first_heuristic_naive(),
+            _ => self.first_heuristic_naive(),
+            //_ => self.heuristic_manhattan(solved),
+        }
     }
 
     // pub fn get_costs(&self, old: Option<&Map>, solved: &Map, func: Heuristic) -> Vec<u16> {
@@ -341,6 +362,7 @@ pub fn create_random(size: u16) -> Result<(Node, Node), &'static str> {
 pub fn solve(map_node: Node, solved_node: Node) {
     if let Some(map) = map_node.map {
         map.display();
+        map.first_get_costs(Heuristic::Naive);
     }
     println!("Result will be:");
     if let Some(map) = solved_node.map {
