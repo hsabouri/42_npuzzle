@@ -73,6 +73,18 @@ fn from_index_to_value(index: u16) -> Option<u16> {
     }
 }
 
+fn from_value_to_index(value: u16) -> u16 {
+    let zero_pos = unsafe {SOLVER.zero_pos};
+
+    if value == 0 {
+        zero_pos
+    } else if value <= zero_pos {
+        value - 1
+    } else {
+        value
+    }
+}
+
 impl Map {
     fn shuffle(&mut self) {
         let mut rng = rand::thread_rng();
@@ -145,8 +157,25 @@ impl Map {
             if solved_value.unwrap() == *value {
                 res.push(0);
             } else {
-                res.push(10);
+                res.push(1);
             }
+        }
+        res
+    }
+    
+    fn first_heuristic_manhattan(&self) -> Vec<u16> {
+        let mut res = Vec::<u16>::new();
+
+        for (index, value) in self.content.iter().enumerate() {
+            let solved_value = from_value_to_index(*value as u16);
+
+            /*
+            if solved_value == *value {
+                res.push(0);
+            } else {
+                res.push(1);
+            }
+            */ 
         }
         res
     }
@@ -155,8 +184,7 @@ impl Map {
         match func {
             //Heuristic::Linear => self.heuristic_linear(solved),
             Heuristic::Naive => self.first_heuristic_naive(),
-            _ => self.first_heuristic_naive(),
-            //_ => self.heuristic_manhattan(solved),
+            _ => self.first_heuristic_manhattan(),
         }
     }
 
@@ -370,7 +398,7 @@ pub fn create_random(size: u16) -> Result<(Node, Node), &'static str> {
 pub fn solve(map_node: Node, solved_node: Node) {
     if let Some(map) = map_node.map {
         map.display();
-        map.first_get_costs(Heuristic::Naive);
+        map.first_get_costs(Heuristic::Manhattan);
     }
     println!("Result will be:");
     if let Some(map) = solved_node.map {
