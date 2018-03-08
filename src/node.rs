@@ -1,4 +1,3 @@
-// mod map;
 use super::Map;
 use super::Movement;
 use std::cmp::Ordering;
@@ -43,31 +42,6 @@ impl Node {
     //     }
     // }
 
-    // pub fn gen(size: i16) -> (Node, Node) {
-    //     let solved = Map::get_solved(size);
-    //     solved.display();
-    //     let map = Map::gen(size as usize, &solved);
-    //     let h = map.get_cost(None, &solved);
-
-    //     (Node {
-    //         map: Some(map),
-    //         parent: 0,
-    //         movement: Movement::No,
-    //         hash: 0,
-    //         g: 0,
-    //         h: h,
-    //         f: h,
-    //     }, Node {
-    //          map: Some(solved),
-    //         parent: 0,
-    //         movement: Movement::No,
-    //         hash: 0,
-    //         g: 0,
-    //         h: 0,
-    //         f: 0,
-
-    //     })
-    // }
     pub fn new_from_map(map: Map) -> Node {
         Node {
             map: Some(map),
@@ -79,17 +53,6 @@ impl Node {
             f: 0
         }
     }
-    // pub fn new_solved() -> Node {
-    //     Node {
-    //         map: Some(Map::new_solved(unsafe {SOLVER.size})),
-    //         parent: 0,
-    //         movement: Movement::No,
-    //         hash: 0,
-    //         g: 0,
-    //         h: 0,
-    //         f: 0
-    //     }
-    // }
 }
 
 impl PartialOrd for Node {

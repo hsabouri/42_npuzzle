@@ -3,11 +3,11 @@ extern crate clap;
 extern crate lib_npuzzle;
 extern crate colored;
 
-use lib_npuzzle::{Solver,Node};
+use lib_npuzzle::Node;
 use colored::*;
 use clap::{Arg, App, ArgMatches};
 
-fn init_map(matches: ArgMatches) -> Result<(Solver, Node), &'static str> {
+fn init_map(matches: ArgMatches) -> Result<Node, &'static str> {
     match matches.value_of("FILE") {
         Some(filename) => lib_npuzzle::parse(filename),
         None => {
@@ -42,7 +42,7 @@ fn main() {
 
     match init_map(matches) {
         Err(msg)                    => println!("{}{}", "Failed to init map: ".red(), msg.red()),
-        Ok((solver, start_node))    => solver.solve(start_map, solved)
+        Ok(start_node)    => lib_npuzzle::process(start_node)
     };
     //TODO display result depending of verbosity ?
 }

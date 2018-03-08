@@ -1,4 +1,4 @@
-use super::{Map,Point};
+use super::Point;
 
 use std::fs::File;
 use std::io::BufReader;
@@ -6,7 +6,7 @@ use std::io::BufRead;
 // use lib;
 // use error;
 
-pub fn parse(filename: &str) -> Result <(Map, u16), String> {
+pub fn parse(filename: &str) -> Result <(Vec<u16>, Point, u16), String> {
     let file = match File::open(filename) {
         Ok(n) => n,
         Err(e) => return Err(format!("Could not open file '{}':\n{}", filename, e)),
@@ -69,7 +69,7 @@ pub fn parse(filename: &str) -> Result <(Map, u16), String> {
     let mut pos: Point = Point {x: 0, y: 0};
     // let mut costs: Vec<Option<usize>> = (0..(size * size)).map(|x| None).collect();
         // Also used to check number's occurences
-    let map = Map::new({
+    // let map = Map::new({
         let mut res = Vec::<u16>::new();
 
         for (y, line) in lines.iter().enumerate() {
@@ -96,8 +96,8 @@ pub fn parse(filename: &str) -> Result <(Map, u16), String> {
                 res.push(n);
             }
         }
-        res
-    }, pos, None);
+        // res
+    // }, pos, None);
     // }, pos, size, costs.iter().map(|x| x.unwrap()).collect());
-    Ok((map, size))
+    Ok((res, pos, size))
 }
