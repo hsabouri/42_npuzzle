@@ -165,6 +165,7 @@ impl Map {
         } else {
             costs[value as usize] = 1;
         }
+        self.costs = Some(costs);
     }
 
     fn first_heuristic_naive(&self) -> Vec<u16> {
@@ -180,6 +181,33 @@ impl Map {
             }
         }
         res
+    }
+
+    fn heuristic_manhattan(&mut self, mov: &Movement) {
+        // TODO: Testing
+        let size = unsafe {SOLVER.size};
+        let to_look_at = match *mov {
+            Movement::Up => self.pos.x + (self.pos.y + 1) * size,
+            Movement::Down => self.pos.x + (self.pos.y - 1) * size,
+            Movement::Left => self.pos.x + 1 + self.pos.y * size,
+            Movement::Right => self.pos.x - 1 + self.pos.y * size,
+            Movement::No => self.pos.x + self.pos.y * size,
+        };
+        let value = self.content[to_look_at as usize];
+        let solved_pos = {
+            let index = from_value_to_index(value);
+
+            Point {x: index % size, y: index / size}
+        };
+        let value_pos = {
+            let index = from_value_to_index(value);
+
+            Point {x: index % size, y: index / size}
+        };
+        let mut costs = self.costs.take().unwrap();
+
+        costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
+        self.costs = Some(costs);
     }
     
     fn first_heuristic_manhattan(&self) -> Vec<u16> {
