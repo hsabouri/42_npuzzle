@@ -52,27 +52,6 @@ pub enum Movement {
     No,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Heuristic {
-    Manhattan,
-    Naive,
-    Linear,
-    Composit,
-}
-
-
-
-// fn from_index_to_value(index: u16) -> u16 {
-//     let zero_pos = unsafe {SOLVER.zero_pos};
-
-//     if index < zero_pos {
-//         index + 1
-//     } else if index > zero_pos {
-//         index
-//     } else if index == zero_pos {
-//         0
-//     }
-// }
 pub fn process(mut start_node: Node) {
     if let Some(ref mut map) = start_node.map {
         map.display();

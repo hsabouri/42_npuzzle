@@ -1,4 +1,3 @@
-
 use generator;
 
 #[derive(Debug, Clone, Eq, PartialEq)]// TODO why all this stuff on eq etc ... ?
@@ -53,5 +52,29 @@ impl Solver {
             map[i] = self.vec_index_to_array_index(self.spiral_value_to_vec_index(spiral_vec[i]));
         }
         map
+    }
+
+    pub fn from_index_to_value(&self, index: u16) -> u16 {
+        let zero_pos = self.zero_pos;
+
+        if index < zero_pos {
+            index + 1
+        } else if index > zero_pos {
+            index
+        } else {
+            0
+        }
+    }
+
+    pub fn from_value_to_index(&self, value: u16) -> u16 {
+        let zero_pos = self.zero_pos;
+
+        if value == 0 {
+            zero_pos
+        } else if value <= zero_pos {
+            value - 1
+        } else {
+            value
+        }
     }
 }

@@ -15,7 +15,15 @@ pub struct Map {
     pub content: Vec<u16>,
     pub solver: &'static Solver,
     pub pos: Point,
-    pub costs: Option<Vec<usize>>,
+    pub costs: Option<Vec<u16>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Heuristic {
+    Manhattan,
+    Naive,
+    Linear,
+    Composit,
 }
 
 impl Map {
@@ -35,7 +43,7 @@ impl Map {
         self.content = self.solver.translate_in(&self.content);
     }
 
-    pub fn new(content: Vec<u16>, ref solver: &'static Solver, pos: Point, costs: Option<Vec<usize>>) -> Map {
+    pub fn new(content: Vec<u16>, ref solver: &'static Solver, pos: Point, costs: Option<Vec<u16>>) -> Map {
         Map {content: content, solver: solver, pos: pos, costs: costs}
     }
 
@@ -69,35 +77,92 @@ impl Map {
         };
     }
 
-    // fn first_heuristic_naive(&self) -> Vec<u16> {
-    //     let mut res = Vec::<u16>::new();
+    fn heuristic_naive(&mut self, mov: &Movement) {
+        // TODO: Testing
+        let size = self.solver.size;
+        let to_look_at = match *mov {
+            Movement::Up => self.pos.x + (self.pos.y + 1) * size,
+            Movement::Down => self.pos.x + (self.pos.y - 1) * size,
+            Movement::Left => self.pos.x + 1 + self.pos.y * size,
+            Movement::Right => self.pos.x - 1 + self.pos.y * size,
+            Movement::No => self.pos.x + self.pos.y * size,
+        };
+        let solved_value = self.solver.from_index_to_value(to_look_at);
+        let value = self.content[to_look_at as usize];
+        let mut costs = self.costs.take().unwrap();
 
-    //     for (index, value) in self.content.iter().enumerate() {
-    //         let solved_value = from_index_to_value(index as u16);
+        if value == solved_value {
+            costs[value as usize] = 0;
+        } else {
+            costs[value as usize] = 1;
+        }
+        self.costs = Some(costs);
+    }
 
-    //         if solved_value == *value {
-    //             res.push(0);
-    //         } else {
-    //             res.push(10);
-    //         }
-    //     }
-    //     res
-    // }
+    fn first_heuristic_naive(&self) -> Vec<u16> {
+        let mut res = Vec::<u16>::new();
 
-    //pub fn first_get_costs(&self, func: Heuristic) -> Vec<u16> {
-    //    match func {
-    //        //Heuristic::Linear => self.heuristic_linear(solved),
-    //        Heuristic::Naive => self.first_heuristic_naive(),
-    //        _ => self.first_heuristic_naive(),
-    //        //_ => self.heuristic_manhattan(solved),
-    //    }
-    //}
+        for (index, value) in self.content.iter().enumerate() {
+            let solved_value = self.solver.from_index_to_value(index as u16);
 
-    // pub fn get_costs(&self, old: Option<&Map>, solved: &Map, func: Heuristic) -> Vec<u16> {
-    //     match func {
-    //         _ => h_wrong(self, old, solved)
-    //     }
-    // }
+            if solved_value == *value {
+                res.push(0);
+            } else {
+                res.push(10);
+            }
+        }
+        res
+    }
+
+    fn heuristic_manhattan(&mut self, mov: &Movement) {
+        // TODO: Testing
+        let size = self.solver.size;
+        let to_look_at = match *mov {
+            Movement::Up => self.pos.x + (self.pos.y + 1) * size,
+            Movement::Down => self.pos.x + (self.pos.y - 1) * size,
+            Movement::Left => self.pos.x + 1 + self.pos.y * size,
+            Movement::Right => self.pos.x - 1 + self.pos.y * size,
+            Movement::No => self.pos.x + self.pos.y * size,
+        };
+        let value = self.content[to_look_at as usize];
+        let solved_pos = {
+            let index = self.solver.from_value_to_index(value);
+
+            Point {x: index % size, y: index / size}
+        };
+        let value_pos = {
+            let index = self.solver.from_value_to_index(value);
+
+            Point {x: index % size, y: index / size}
+        };
+        let mut costs = self.costs.take().unwrap();
+
+        costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
+        self.costs = Some(costs);
+    }
+
+    fn first_heuristic_manhattan(&self) -> Vec<u16> {
+        let mut res = Vec::<u16>::new();
+        let size = self.solver.size;
+
+        for (index, value) in self.content.iter().enumerate() {
+            let solved_index = self.solver.from_value_to_index(*value as u16);
+            let value_pos = Point {x: index as u16 % size, y: index as u16 / size};
+            let solved_pos = Point {x: solved_index as u16 % size, y: solved_index as u16 / size};
+
+            res.push(((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16);
+        }
+        res
+    }
+
+    pub fn first_costs(&self, func: Heuristic) -> Vec<u16> {
+        match func {
+            //Heuristic::Linear => self.heuristic_linear(solved),
+            Heuristic::Naive => self.first_heuristic_naive(),
+            _ => self.first_heuristic_naive(),
+            //_ => self.heuristic_manhattan(solved),
+        }
+    }
 
     // pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {
     //     self.get_costs(old, solved, Heuristic::Wrong).iter().fold(0, |acc, &x| acc + x as usize)
