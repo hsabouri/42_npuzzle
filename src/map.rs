@@ -77,7 +77,7 @@ impl Map {
         };
     }
 
-    fn heuristic_naive(&mut self, mov: &Movement) {
+    fn heuristic_naive(&mut self, mov: &Movement) -> Vec<u16> {
         // TODO: Testing
         let size = self.solver.size;
         let to_look_at = match *mov {
@@ -96,7 +96,7 @@ impl Map {
         } else {
             costs[value as usize] = 1;
         }
-        self.costs = Some(costs);
+        costs
     }
 
     fn first_heuristic_naive(&self) -> Vec<u16> {
@@ -114,7 +114,7 @@ impl Map {
         res
     }
 
-    fn heuristic_manhattan(&mut self, mov: &Movement) {
+    fn heuristic_manhattan(&mut self, mov: &Movement) -> Vec<u16> {
         // TODO: Testing
         let size = self.solver.size;
         let to_look_at = match *mov {
@@ -138,7 +138,7 @@ impl Map {
         let mut costs = self.costs.take().unwrap();
 
         costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
-        self.costs = Some(costs);
+        costs
     }
 
     fn first_heuristic_manhattan(&self) -> Vec<u16> {
@@ -155,13 +155,18 @@ impl Map {
         res
     }
 
-    pub fn first_costs(&self, func: Heuristic) -> Vec<u16> {
-        match func {
-            //Heuristic::Linear => self.heuristic_linear(solved),
+    pub fn first_costs(&mut self, func: Heuristic) {
+        self.costs = Some(match func {
             Heuristic::Naive => self.first_heuristic_naive(),
-            _ => self.first_heuristic_naive(),
-            //_ => self.heuristic_manhattan(solved),
-        }
+            _ => self.first_heuristic_manhattan(),
+        });
+    }
+
+    pub fn costs(&mut self, mov: &Movement, func: Heuristic) {
+        self.costs = Some(match func {
+            Heuristic::Naive => self.heuristic_naive(mov),
+            _ => self.heuristic_manhattan(mov),
+        });
     }
 
     // pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {
