@@ -19,7 +19,6 @@ pub use node::Node;
 use colored::*;
 pub use solver::Solver;
 
-
 // pub fn process(&self, StartNode: Node) {
 //     if let Some(mut map) = StartNode.map {
 //         map.display(self.size);
@@ -53,15 +52,15 @@ pub enum Movement {
 }
 
 pub fn process(mut start_node: Node) {
+    let closeset = Vec::<Node>::new();
+    let openset  = Vec::<Node>::new();
+
     if let Some(ref mut map) = start_node.map {
-        map.display();
         map.translate_in();
-        println!("Order:");
-        map.display();
-        // let t = Map::new(generator::translate_in(map.content), map.pos, None);
-        // t.display();
-        // map.first_get_costs(Heuristic::Naive);
+        map.set_first_costs();
     }
+
+    let childs = start_node.get_childs(0);
 }
 
 pub fn parse(filename: &str, func: Heuristic) -> Result<Node, &'static str> {

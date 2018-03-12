@@ -24,19 +24,49 @@ impl Node {
         }
     }
 
-    pub fn child(&mut self, movement: Movement, parent: usize) -> Node {
-        let mut map = self.map.clone().unwrap();
-
-        map.child(&movement);
-        let h = map.get_cost();
-        Node {
-            map: Some(map),
-            parent: parent,
-            movement: movement,
-            g: self.g + 1,
-            h: h,
-            f: self.g + 1 + h,
+    pub fn child(&mut self, movement: Movement, parent: usize) -> Option<Node> {
+        match self.map {
+            Some(ref map) => {
+                match map.child(&movement) {
+                    Some(mut child_map) => {
+                        let h = child_map.get_cost();
+                        Some (Node {
+                            map: Some(child_map),
+                            parent: parent,
+                            movement: movement,
+                            g: self.g + 1,
+                            h: h,
+                            f: self.g + 1 + h,
+                        })
+                    },
+                    None => None,
+                }
+            },
+            None => None,
         }
+    }
+
+    pub fn get_childs(&mut self, parent: usize) -> Vec<Node> {
+        let mut res = Vec::<Node>::new();
+
+        match self.child(Movement::Up, parent) {
+            Some(node) => {res.push(node);},
+            None => {},
+        }
+        match self.child(Movement::Down, parent) {
+            Some(node) => {res.push(node);},
+            None => {},
+        }
+        match self.child(Movement::Left, parent) {
+            Some(node) => {res.push(node);},
+            None => {},
+        }
+        match self.child(Movement::Right, parent) {
+            Some(node) => {res.push(node);},
+            None => {},
+        }
+        self.map = None;
+        res
     }
 
     pub fn new_from_map(map: Map) -> Node {
