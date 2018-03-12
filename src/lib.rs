@@ -12,7 +12,7 @@ mod node;
 mod map;
 mod solver;
 
-use map::{Map,Point};
+pub use map::{Map,Point,Heuristic};
 pub use node::Node;
 // use rand::Rng;
 // use std::cmp::Ordering;
@@ -64,19 +64,19 @@ pub fn process(mut start_node: Node) {
     }
 }
 
-pub fn parse(filename: &str) -> Result<Node, &'static str> {
+pub fn parse(filename: &str, func: Heuristic) -> Result<Node, &'static str> {
     let (vec_spiral, point, size) = match parser::parse(filename) {
         Ok(x) => x,
         Err(msg) => {println!("{}", msg.red()); return Err("Failed to parse")},
     };
-    let solver = Solver::new(size);
+    let solver = Solver::new(size, func);
     let map = Map::new(vec_spiral, &solver, point, None);
     Ok(Node::new_from_map(map))
 }
 
 
-pub fn create_random(size: u16) -> Result<Node, &'static str> {
-    let solver: &Solver = Solver::new(size);
+pub fn create_random(size: u16, func: Heuristic) -> Result<Node, &'static str> {
+    let solver: &Solver = Solver::new(size, func);
     let zero_pos = solver.zero_pos;
     let mut vec_spiral = generator::create_solved_spiral(size as i16); //TODO remove this generation and clone solver
     vec_spiral[zero_pos as usize] = 0;

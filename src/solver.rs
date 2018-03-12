@@ -1,26 +1,30 @@
 use generator;
+use map::Heuristic;
 
 #[derive(Debug, Clone, Eq, PartialEq)]// TODO why all this stuff on eq etc ... ?
 pub struct Solver {
     pub size: u16,
     pub sq_size: usize,
     pub zero_pos: u16,
-    pub solved: Option<Vec<u16>>
+    pub func: Heuristic,
+    pub solved: Option<Vec<u16>>,
 }
 
 static mut SOLVER: Solver = Solver {
     size: 0,
     sq_size: 0,
-    zero_pos:0,
-    solved: None
+    zero_pos: 0,
+    func: Heuristic::Manhattan,
+    solved: None,
 };
 
 impl Solver {
-    pub fn new(size: u16) -> &'static Solver {
+    pub fn new(size: u16, func: Heuristic) -> &'static Solver {
         unsafe {
             SOLVER.size = size;
             SOLVER.sq_size = (size * size) as usize;
             SOLVER.zero_pos = (size / 2) * (size + 1) + size % 2 - 1;
+            SOLVER.func = func;
             let mut vec = generator::create_solved_spiral(size as i16);//TODO import generator here
             vec[SOLVER.zero_pos as usize] = 0;
             SOLVER.solved = Some(vec);

@@ -7,47 +7,43 @@ pub struct Node {
     pub map: Option<Map>,
     pub parent: usize,
     pub movement: Movement,
-    pub hash: usize, // Can basically be a weighted addition of the content and the complexity
-    pub g: usize,
-    pub h: usize,
-    pub f: usize,
+    pub g: u16,
+    pub h: u16,
+    pub f: u16,
 }
 
 impl Node {
-    pub fn new(map: Map, parent: usize, movement: Movement, hash: usize, g: usize, h: usize, f: usize) -> Node {
+    pub fn new(map: Map, parent: usize, movement: Movement, g: u16, h: u16, f: u16) -> Node {
         Node {
             map: Some(map),
             parent: parent,
             movement: movement,
-            hash: hash,
             g: g,
             h: h,
             f: f,
         }
     }
 
-    // pub fn child(&mut self, movement: Movement, parent: usize, solved: &Map) -> Node {
-    //     let mut map = self.map.clone().unwrap();
+    pub fn child(&mut self, movement: Movement, parent: usize) -> Node {
+        let mut map = self.map.clone().unwrap();
 
-    //     map.child(&movement);
-    //     let h = map.get_cost(None, &solved);
-    //     Node {
-    //         map: Some(map),
-    //         parent: parent,
-    //         movement: movement,
-    //         hash: 0, //TODO
-    //         g: self.g + 1,
-    //         h: h,
-    //         f: self.g + 1 + h,
-    //     }
-    // }
+        map.child(&movement);
+        let h = map.get_cost();
+        Node {
+            map: Some(map),
+            parent: parent,
+            movement: movement,
+            g: self.g + 1,
+            h: h,
+            f: self.g + 1 + h,
+        }
+    }
 
     pub fn new_from_map(map: Map) -> Node {
         Node {
             map: Some(map),
             parent: 0,
             movement: Movement::No,
-            hash: 0,
             g: 0,
             h: 0,
             f: 0

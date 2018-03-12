@@ -23,7 +23,6 @@ pub enum Heuristic {
     Manhattan,
     Naive,
     Linear,
-    Composit,
 }
 
 impl Map {
@@ -59,13 +58,13 @@ impl Map {
 
     fn do_move(&mut self, direction: Movement) {
         self.content.swap((self.pos.x + self.pos.y * self.solver.size) as usize,
-        (match direction {
-            Movement::Up => self.pos.x + (self.pos.y - 1) * self.solver.size,
-            Movement::Down => self.pos.x + (self.pos.y + 1) * self.solver.size,
-            Movement::Left => (self.pos.x - 1) + self.pos.y * self.solver.size,
-            Movement::Right => (self.pos.x + 1) + self.pos.y * self.solver.size,
-            Movement::No => self.pos.x + self.pos.y * self.solver.size
-        }) as usize
+            (match direction {
+                Movement::Up => self.pos.x + (self.pos.y - 1) * self.solver.size,
+                Movement::Down => self.pos.x + (self.pos.y + 1) * self.solver.size,
+                Movement::Left => (self.pos.x - 1) + self.pos.y * self.solver.size,
+                Movement::Right => (self.pos.x + 1) + self.pos.y * self.solver.size,
+                Movement::No => self.pos.x + self.pos.y * self.solver.size
+            }) as usize
         );
 
         self.pos = match direction {
@@ -75,6 +74,31 @@ impl Map {
             Movement::Right => Point {x: self.pos.x + 1, y: self.pos.y},
             Movement::No => Point {x: self.pos.x, y: self.pos.y},
         };
+    }
+    
+    pub fn child(&mut self, movement: &Movement) {
+        let size = self.solver.size;
+
+        self.content.swap((self.pos.x + self.pos.y * size) as usize, {
+            (match *movement {
+                Movement::Down => self.pos.x + (self.pos.y - 1) * size,
+                Movement::Up => self.pos.x + (self.pos.y + 1) * size,
+                Movement::Right => (self.pos.x - 1) + self.pos.y * size,
+                Movement::Left => (self.pos.x + 1) + self.pos.y * size,
+                Movement::No => self.pos.x + self.pos.y * size,
+            }) as usize
+        });
+
+        self.pos = match *movement {
+            Movement::Right => Point {x: self.pos.x - 1, y: self.pos.y},
+            Movement::Left => Point {x: self.pos.x + 1, y: self.pos.y},
+            Movement::Down => Point {x: self.pos.x, y: self.pos.y - 1},
+            Movement::Up => Point {x: self.pos.x, y: self.pos.y + 1},
+            Movement::No => Point {x: self.pos.x, y: self.pos.y},
+        };
+        
+        let func = self.solver.func;
+        self.set_costs(movement, func);
     }
 
     fn heuristic_naive(&mut self, mov: &Movement) -> Vec<u16> {
@@ -155,43 +179,26 @@ impl Map {
         res
     }
 
-    pub fn first_costs(&mut self, func: Heuristic) {
+    pub fn set_first_costs(&mut self, func: Heuristic) {
         self.costs = Some(match func {
             Heuristic::Naive => self.first_heuristic_naive(),
             _ => self.first_heuristic_manhattan(),
         });
     }
 
-    pub fn costs(&mut self, mov: &Movement, func: Heuristic) {
+    pub fn set_costs(&mut self, mov: &Movement, func: Heuristic) {
         self.costs = Some(match func {
             Heuristic::Naive => self.heuristic_naive(mov),
             _ => self.heuristic_manhattan(mov),
         });
     }
 
-    // pub fn get_cost(&self, old: Option<&Map>, solved: &Map) -> usize {
-    //     self.get_costs(old, solved, Heuristic::Wrong).iter().fold(0, |acc, &x| acc + x as usize)
-    // }
-
-    // pub fn child(&mut self, movement: &Movement) {
-    //     self.content.swap(self.pos.x + self.pos.y * unsafe {SOLVER.size}, {
-    //         match *movement {
-    //             Movement::Down => self.pos.x + (self.pos.y - 1) * unsafe {SOLVER.size},
-    //             Movement::Up => self.pos.x + (self.pos.y + 1) * unsafe {SOLVER.size},
-    //             Movement::Right => (self.pos.x - 1) + self.pos.y * unsafe {SOLVER.size},
-    //             Movement::Left => (self.pos.x + 1) + self.pos.y * unsafe {SOLVER.size},
-    //             Movement::No => self.pos.x + self.pos.y * unsafe {SOLVER.size}
-    //         }
-    //     });
-
-    //     self.pos = match *movement {
-    //         Movement::Right => Point {x: self.pos.x - 1, y: self.pos.y},
-    //         Movement::Left => Point {x: self.pos.x + 1, y: self.pos.y},
-    //         Movement::Down => Point {x: self.pos.x, y: self.pos.y - 1},
-    //         Movement::Up => Point {x: self.pos.x, y: self.pos.y + 1},
-    //         Movement::No => Point {x: self.pos.x, y: self.pos.y},
-    //     };
-    // }
+    pub fn get_cost(&mut self) -> u16 {
+        let costs = self.costs.take().unwrap();
+        let res = costs.iter().fold(0, |mut sum, &val| {sum += val; sum});
+        self.costs = Some(costs);
+        res
+    }
 
     pub fn display(&self) {
         for y in 0..self.solver.size {

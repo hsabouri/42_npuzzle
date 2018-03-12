@@ -3,19 +3,30 @@ extern crate clap;
 extern crate lib_npuzzle;
 extern crate colored;
 
-use lib_npuzzle::Node;
+use lib_npuzzle::{Node, Heuristic};
 use colored::*;
 use clap::{Arg, App, ArgMatches};
 
 fn init_map(matches: ArgMatches) -> Result<Node, &'static str> {
+    let heuristic_func = match matches.value_of("H") {
+        Some(func) => {
+            match func {
+                "manhattan" | "m" => Heuristic::Manhattan,
+                "naive" | "n" => Heuristic::Naive,
+                "linear" | "l" => Heuristic::Linear,
+                _ => return Err("Heuristic does not exist"),
+            }
+        },
+        None => Heuristic::Manhattan,
+    };
     match matches.value_of("FILE") {
-        Some(filename) => lib_npuzzle::parse(filename),
+        Some(filename) => lib_npuzzle::parse(filename, heuristic_func),
         None => {
             let size = value_t!(matches.value_of("SIZE"), u16).unwrap_or_else(|e| e.exit());
             match size {
                 size if size > 20   => Err("Ah ah nice try. it's too big !."),
                 size if size < 3    => Err("Size must be equals or higher than 3."),
-                size                => lib_npuzzle::create_random(size),
+                size                => lib_npuzzle::create_random(size, heuristic_func),
             }
         }
     }
