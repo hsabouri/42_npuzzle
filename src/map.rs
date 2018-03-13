@@ -75,7 +75,7 @@ impl Map {
             &Movement::No => Point {x: self.pos.x, y: self.pos.y},
         };
     }
-    
+
     pub fn child(&self, movement: &Movement) -> Option<Map> {
         match self.can_move(movement) {
             true => {
@@ -112,8 +112,7 @@ impl Map {
     }
 
     fn first_heuristic_naive(&self) -> Vec<u16> {
-        let size = self.solver.size;
-        let mut res: Vec<u16> = vec![0; (size * size) as usize];
+        let mut res: Vec<u16> = vec![0; self.solver.sq_size];
 
         for (index, value) in self.content.iter().enumerate() {
             let solved_value = self.solver.from_index_to_value(index as u16);
@@ -139,14 +138,8 @@ impl Map {
             Movement::No => self.pos.x + self.pos.y * size,
         };
         let value = self.content[to_look_at as usize];
-        let solved_pos = {
-            let index = self.solver.from_value_to_index(value);
-
-            Point {x: index % size, y: index / size}
-        };
-        let value_pos = {
-            Point {x: to_look_at % size, y: to_look_at / size}
-        };
+        let solved_pos = self.solver.index_to_point(self.solver.from_value_to_index(value));
+        let value_pos = self.solver.index_to_point(to_look_at);
         let mut costs = self.costs.take().unwrap();
 
         costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
@@ -155,13 +148,12 @@ impl Map {
     }
 
     fn first_heuristic_manhattan(&self) -> Vec<u16> {
-        let size = self.solver.size;
-        let mut res: Vec<u16> = vec![0; (size * size) as usize];
+        let mut res: Vec<u16> = vec![0; self.solver.sq_size];
 
         for (index, value) in self.content.iter().enumerate() {
             let solved_index = self.solver.from_value_to_index(*value as u16);
-            let value_pos = Point {x: index as u16 % size, y: index as u16 / size};
-            let solved_pos = Point {x: solved_index as u16 % size, y: solved_index as u16 / size};
+            let value_pos = self.solver.index_to_point(index as u16);
+            let solved_pos = self.solver.index_to_point(solved_index as u16);
             let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
 
             res[*value as usize] = cost;

@@ -84,4 +84,11 @@ impl Solver {
             value
         }
     }
+
+    pub fn index_to_point(&self, index: u16) -> Point {
+        Point {
+            x: index % self.size,
+            y: index / self.size
+        }
+    }
 }
