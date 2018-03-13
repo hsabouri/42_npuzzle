@@ -56,11 +56,15 @@ pub fn process(mut start_node: Node) {
     let openset  = Vec::<Node>::new();
 
     if let Some(ref mut map) = start_node.map {
+        map.display();
         map.translate_in();
         map.set_first_costs();
+        map.display();
     }
 
+    println!("{:#?}", start_node);
     let childs = start_node.get_childs(0);
+    println!("{:#?}", childs);
 }
 
 pub fn parse(filename: &str, func: Heuristic) -> Result<Node, &'static str> {
@@ -76,11 +80,11 @@ pub fn parse(filename: &str, func: Heuristic) -> Result<Node, &'static str> {
 
 pub fn create_random(size: u16, func: Heuristic) -> Result<Node, &'static str> {
     let solver: &Solver = Solver::new(size, func);
-    let zero_pos = solver.zero_pos;
+    let zero_index = solver.zero_index;
     let mut vec_spiral = generator::create_solved_spiral(size as i16); //TODO remove this generation and clone solver
-    vec_spiral[zero_pos as usize] = 0;
+    vec_spiral[zero_index as usize] = 0;
 
-    let mut map = Map::new(vec_spiral, &solver, Point{x: zero_pos % size, y: zero_pos / size}, None);
+    let mut map = Map::new(vec_spiral, &solver, Point{x: zero_index % size, y: zero_index / size}, None);
     map.shuffle();
     Ok(Node::new_from_map(map))
 }
