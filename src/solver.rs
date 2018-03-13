@@ -1,11 +1,12 @@
 use generator;
-use map::Heuristic;
+use map::{Heuristic, Point};
 
 #[derive(Debug, Clone, Eq, PartialEq)]// TODO why all this stuff on eq etc ... ?
 pub struct Solver {
     pub size: u16,
     pub sq_size: usize,
-    pub zero_pos: u16,
+    pub zero_index: u16,
+    pub zero_pos: Point,
     pub func: Heuristic,
     pub solved: Option<Vec<u16>>,
 }
@@ -13,7 +14,8 @@ pub struct Solver {
 static mut SOLVER: Solver = Solver {
     size: 0,
     sq_size: 0,
-    zero_pos: 0,
+    zero_index: 0,
+    zero_pos: Point {x: 0, y: 0},
     func: Heuristic::Manhattan,
     solved: None,
 };
@@ -23,18 +25,19 @@ impl Solver {
         unsafe {
             SOLVER.size = size;
             SOLVER.sq_size = (size * size) as usize;
-            SOLVER.zero_pos = (size / 2) * (size + 1) + size % 2 - 1;
+            SOLVER.zero_index = (size / 2) * (size + 1) + size % 2 - 1;
+            SOLVER.zero_pos = Point {x: SOLVER.zero_index % SOLVER.size, y: SOLVER.zero_index / SOLVER.size};
             SOLVER.func = func;
             let mut vec = generator::create_solved_spiral(size as i16);//TODO import generator here
-            vec[SOLVER.zero_pos as usize] = 0;
+            vec[SOLVER.zero_index as usize] = 0;
             SOLVER.solved = Some(vec);
             &SOLVER
         }
     }
     fn vec_index_to_array_index(&self, index: u16) -> u16 {
-        if index < self.zero_pos {
+        if index < self.zero_index {
             index + 1
-        } else if index > self.zero_pos {
+        } else if index > self.zero_index {
             index
         } else {
             0
@@ -59,11 +62,11 @@ impl Solver {
     }
 
     pub fn from_index_to_value(&self, index: u16) -> u16 {
-        let zero_pos = self.zero_pos;
+        let zero_index = self.zero_index;
 
-        if index < zero_pos {
+        if index < zero_index {
             index + 1
-        } else if index > zero_pos {
+        } else if index > zero_index {
             index
         } else {
             0
@@ -71,11 +74,11 @@ impl Solver {
     }
 
     pub fn from_value_to_index(&self, value: u16) -> u16 {
-        let zero_pos = self.zero_pos;
+        let zero_index = self.zero_index;
 
         if value == 0 {
-            zero_pos
-        } else if value <= zero_pos {
+            zero_index
+        } else if value <= zero_index {
             value - 1
         } else {
             value

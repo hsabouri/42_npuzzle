@@ -112,15 +112,16 @@ impl Map {
     }
 
     fn first_heuristic_naive(&self) -> Vec<u16> {
-        let mut res = Vec::<u16>::new();
+        let size = self.solver.size;
+        let mut res: Vec<u16> = vec![0; (size * size) as usize];
 
         for (index, value) in self.content.iter().enumerate() {
             let solved_value = self.solver.from_index_to_value(index as u16);
 
             if solved_value == *value {
-                res.push(0);
+                res[(*value) as usize] = 0;
             } else {
-                res.push(10);
+                res[(*value) as usize] = 10;
             }
         }
         res
@@ -129,6 +130,7 @@ impl Map {
     fn heuristic_manhattan(&mut self, mov: &Movement) -> Vec<u16> {
         // TODO: Testing
         let size = self.solver.size;
+        let zero_pos = &self.solver.zero_pos;
         let to_look_at = match *mov {
             Movement::Up => self.pos.x + (self.pos.y + 1) * size,
             Movement::Down => self.pos.x + (self.pos.y - 1) * size,
@@ -143,26 +145,26 @@ impl Map {
             Point {x: index % size, y: index / size}
         };
         let value_pos = {
-            let index = self.solver.from_value_to_index(value);
-
-            Point {x: index % size, y: index / size}
+            Point {x: to_look_at % size, y: to_look_at / size}
         };
         let mut costs = self.costs.take().unwrap();
 
         costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
+        costs[0] = ((self.pos.x as i16 - zero_pos.x as i16).abs() + (self.pos.y as i16 - zero_pos.y as i16).abs()) as u16;
         costs
     }
 
     fn first_heuristic_manhattan(&self) -> Vec<u16> {
-        let mut res = Vec::<u16>::new();
         let size = self.solver.size;
+        let mut res: Vec<u16> = vec![0; (size * size) as usize];
 
         for (index, value) in self.content.iter().enumerate() {
             let solved_index = self.solver.from_value_to_index(*value as u16);
             let value_pos = Point {x: index as u16 % size, y: index as u16 / size};
             let solved_pos = Point {x: solved_index as u16 % size, y: solved_index as u16 / size};
+            let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
 
-            res.push(((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16);
+            res[*value as usize] = cost;
         }
         res
     }
