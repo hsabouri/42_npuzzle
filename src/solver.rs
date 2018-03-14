@@ -34,6 +34,15 @@ impl Solver {
             &SOLVER
         }
     }
+    fn array_value_to_spiral_index(&self, value: u16) -> u16 {
+        if value == 0 {
+            self.zero_index
+        } else if value <= self.zero_index {
+            value - 1
+        } else {
+            value
+        }
+    }
     fn vec_index_to_array_index(&self, index: u16) -> u16 {
         if index < self.zero_index {
             index + 1
@@ -53,10 +62,21 @@ impl Solver {
         }
         panic!("There is no {} in solved", value);
     }
+
     pub fn translate_in(&self, spiral_vec: &Vec<u16>) -> Vec<u16> {
         let mut map: Vec<u16> = vec![0; self.sq_size];
         for i in 0..self.sq_size {
             map[i] = self.vec_index_to_array_index(self.spiral_value_to_vec_index(spiral_vec[i]));
+        }
+        map
+    }
+
+    pub fn translate_out(&self, array_vec: &Vec<u16>) -> Vec<u16> {
+        let mut map: Vec<u16> = vec![0; self.sq_size];
+        if let Some(ref table) = self.solved {
+            for i in 0..self.sq_size {
+                map[i] = table[self.array_value_to_spiral_index(array_vec[i]) as usize];
+            }
         }
         map
     }

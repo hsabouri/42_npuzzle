@@ -41,6 +41,9 @@ impl Map {
     pub fn translate_in(&mut self) {
         self.content = self.solver.translate_in(&self.content);
     }
+    pub fn translate_out(&mut self) {
+        self.content = self.solver.translate_out(&self.content);
+    }
 
     pub fn new(content: Vec<u16>, ref solver: &'static Solver, pos: Point, costs: Option<Vec<u16>>) -> Map {
         Map {content: content, solver: solver, pos: pos, costs: costs}
