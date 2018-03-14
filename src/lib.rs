@@ -51,20 +51,47 @@ pub enum Movement {
     No,
 }
 
+fn push_sorted(openset: &mut Vec<Node>, node: Node) {
+    let index = openset.binary_search(&node).unwrap_or_else(|e| e);
+    openset.insert(index, node);
+}
+
 pub fn process(mut start_node: Node) {
-    let closeset = Vec::<Node>::new();
-    let openset  = Vec::<Node>::new();
+    let mut closeset = Vec::<Node>::new();
+    let mut openset  = Vec::<Node>::new();
+    let h: u16;
 
     if let Some(ref mut map) = start_node.map {
         map.display();
         map.translate_in();
         map.set_first_costs();
         map.display();
+        h = map.get_cost();
+    } else {
+        h = 0;
     }
 
-    println!("{:#?}", start_node);
-    let childs = start_node.get_childs(0);
-    println!("{:#?}", childs);
+    start_node.h = h;
+    start_node.f = h;
+    openset.push(start_node);
+    loop {
+        if let Some(last) = closeset.last() {
+            if last.h == 0 {
+                break;
+            }
+        }
+        let mut node = openset.remove(0);
+        println!("{:?} - {:?}", node.h, node.g);
+        let index = closeset.len();
+        let mut childs = node.get_childs(index);
+        closeset.push(node);
+        while childs.len() > 0 {
+            let child = childs.remove(0);
+            push_sorted(&mut openset, child);
+        }
+    }
+    let end = closeset.last().take().unwrap();
+    println!("{:#?}", end);
 }
 
 pub fn parse(filename: &str, func: Heuristic) -> Result<Node, &'static str> {

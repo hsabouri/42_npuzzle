@@ -108,7 +108,7 @@ impl Map {
         } else {
             costs[value as usize] = 1;
         }
-        if zero_index == self.solver.from_point_to_index(&self.pos) {
+        if zero_index == self.solver.point_to_index(&self.pos) {
             costs[0] = 0;
         } else {
             costs[0] = 1;

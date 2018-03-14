@@ -49,21 +49,29 @@ impl Node {
     pub fn get_childs(&mut self, parent: usize) -> Vec<Node> {
         let mut res = Vec::<Node>::new();
 
-        match self.child(Movement::Up, parent) {
-            Some(node) => {res.push(node);},
-            None => {},
+        if self.movement != Movement::Down {
+            match self.child(Movement::Up, parent) {
+                Some(node) => {res.push(node);},
+                None => {},
+            }
         }
-        match self.child(Movement::Down, parent) {
-            Some(node) => {res.push(node);},
-            None => {},
+        if self.movement != Movement::Up {
+            match self.child(Movement::Down, parent) {
+                Some(node) => {res.push(node);},
+                None => {},
+            }
         }
-        match self.child(Movement::Left, parent) {
-            Some(node) => {res.push(node);},
-            None => {},
+        if self.movement != Movement::Right {
+            match self.child(Movement::Left, parent) {
+                Some(node) => {res.push(node);},
+                None => {},
+            }
         }
-        match self.child(Movement::Right, parent) {
-            Some(node) => {res.push(node);},
-            None => {},
+        if self.movement != Movement::Left {
+            match self.child(Movement::Right, parent) {
+                Some(node) => {res.push(node);},
+                None => {},
+            }
         }
         self.map = None;
         res
