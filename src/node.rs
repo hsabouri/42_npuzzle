@@ -97,6 +97,6 @@ impl PartialOrd for Node {
 
 impl Ord for Node {
     fn cmp(&self, other: &Node) -> Ordering {
-        self.f.cmp(&other.f)
+        other.f.cmp(&self.f)
     }
 }

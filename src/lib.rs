@@ -63,6 +63,7 @@ pub fn process(mut start_node: Node) {
 
     if let Some(ref mut map) = start_node.map {
         map.display();
+        println!("\n");
         map.translate_in();
         map.set_first_costs();
         map.display();
@@ -80,8 +81,7 @@ pub fn process(mut start_node: Node) {
                 break;
             }
         }
-        let mut node = openset.remove(0);
-        println!("{:?} - {:?}", node.h, node.g);
+        let mut node = openset.pop().unwrap();
         let index = closeset.len();
         let mut childs = node.get_childs(index);
         closeset.push(node);
@@ -90,8 +90,14 @@ pub fn process(mut start_node: Node) {
             push_sorted(&mut openset, child);
         }
     }
-    let end = closeset.last().take().unwrap();
-    println!("{:#?}", end);
+    let end = closeset.pop().unwrap();
+    println!("{:?}", end.movement);
+    let mut index = end.parent;
+    while index != 0 {
+        let node = closeset.remove(index);
+        println!("{:?}", node.movement);
+        index = node.parent;
+    }
 }
 
 pub fn parse(filename: &str, func: Heuristic) -> Result<Node, &'static str> {

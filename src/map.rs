@@ -146,8 +146,8 @@ impl Map {
         let value_pos = self.solver.index_to_point(to_look_at);
         let mut costs = self.costs.take().unwrap();
 
-        costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
-        costs[0] = ((self.pos.x as i16 - zero_pos.x as i16).abs() + (self.pos.y as i16 - zero_pos.y as i16).abs()) as u16;
+        costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * 10;
+        costs[0] = ((self.pos.x as i16 - zero_pos.x as i16).abs() + (self.pos.y as i16 - zero_pos.y as i16).abs()) as u16 * 10;
         costs
     }
 
@@ -158,7 +158,7 @@ impl Map {
             let solved_index = self.solver.from_value_to_index(*value as u16);
             let value_pos = self.solver.index_to_point(index as u16);
             let solved_pos = self.solver.index_to_point(solved_index as u16);
-            let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16;
+            let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * 10;
 
             res[*value as usize] = cost;
         }
