@@ -84,4 +84,16 @@ impl Solver {
             value
         }
     }
+
+    pub fn from_index_to_point(&self, index: u16) -> Point {
+        let size = self.size;
+
+        Point {x: index % size, y: index / size}
+    }
+    
+    pub fn from_point_to_index(&self, point: &Point) -> u16 {
+        let size = self.size;
+
+        point.x + point.y * size
+    }
 }

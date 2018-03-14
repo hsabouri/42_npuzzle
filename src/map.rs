@@ -90,8 +90,8 @@ impl Map {
     }
 
     fn heuristic_naive(&mut self, mov: &Movement) -> Vec<u16> {
-        // TODO: Testing
         let size = self.solver.size;
+        let zero_index = self.solver.zero_index;
         let to_look_at = match *mov {
             Movement::Up => self.pos.x + (self.pos.y + 1) * size,
             Movement::Down => self.pos.x + (self.pos.y - 1) * size,
@@ -107,6 +107,11 @@ impl Map {
             costs[value as usize] = 0;
         } else {
             costs[value as usize] = 1;
+        }
+        if zero_index == self.solver.from_point_to_index(&self.pos) {
+            costs[0] = 0;
+        } else {
+            costs[0] = 1;
         }
         costs
     }
@@ -128,7 +133,6 @@ impl Map {
     }
 
     fn heuristic_manhattan(&mut self, mov: &Movement) -> Vec<u16> {
-        // TODO: Testing
         let size = self.solver.size;
         let zero_pos = &self.solver.zero_pos;
         let to_look_at = match *mov {
