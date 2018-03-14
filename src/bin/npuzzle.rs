@@ -31,6 +31,14 @@ fn init_map(matches: ArgMatches) -> Result<Node, &'static str> {
         }
     }
 }
+fn do_the_job(matches: ArgMatches) -> Result<(), &'static str> {
+    let start_node = match init_map(matches) {
+        Ok(x)       => x,
+        Err(msg)    => {println!("{}", msg.red()); return Err("Failed to init map")}
+    };
+    lib_npuzzle::process(start_node)?;
+    Ok(())
+}
 
 fn main() {
     let matches = App::new("npuzzle")
@@ -57,9 +65,8 @@ fn main() {
             .multiple(true))
         .get_matches();
 
-    match init_map(matches) {
-        Err(msg)                    => println!("{}{}", "Failed to init map: ".red(), msg.red()),
-        Ok(start_node)    => lib_npuzzle::process(start_node)
-    };
+    if let Err(msg) = do_the_job(matches) {
+        println!("{}", msg.red());
+    }
     //TODO display result depending of verbosity ?
 }

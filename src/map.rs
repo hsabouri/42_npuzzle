@@ -38,6 +38,27 @@ impl Map {
         }
     }
 
+    pub fn check_validity(&self) -> Result<(), &'static str> {
+        let mut inversion = 0;
+        for i in 0..self.solver.sq_size {
+            if self.content[i] == 0 {
+                 continue;
+            }
+            for j in (i + 1)..self.solver.sq_size {
+                if self.content[j] == 0 {
+                    continue
+                } else if self.content[j] > self.content[i] {
+                    inversion += 1;
+                }
+            }
+        }
+        match inversion % 2 {
+            1 => Err("This puzzle cannot be solved"),
+            _ => Ok(())
+        }
+
+    }
+
     pub fn translate_in(&mut self) {
         self.content = self.solver.translate_in(&self.content);
     }
