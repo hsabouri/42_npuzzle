@@ -38,11 +38,14 @@ impl Map {
         }
     }
 
+    /// Check the validity of a map, will return an error if puzzle cannot be resolved.
+    /// For mor information :
+    /// http://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
     pub fn check_validity(&self) -> Result<(), &'static str> {
-        let mut inversion = 0;
+        let mut inversion: u32 = 0;
         for i in 0..self.solver.sq_size {
             if self.content[i] == 0 {
-                 continue;
+                continue;
             }
             for j in (i + 1)..self.solver.sq_size {
                 if self.content[j] == 0 {
@@ -52,11 +55,22 @@ impl Map {
                 }
             }
         }
-        match inversion % 2 {
-            1 => Err("This puzzle cannot be solved"),
-            _ => Ok(())
+        match self.solver.size % 2 {
+            1 => match inversion % 2 {
+                1 => Err("This puzzle cannot be solved"),
+                _ => Ok(())
+            },
+            _ => match self.solver.size % 4 {
+                0   => match inversion % 2 == (self.pos.y % 2) as u32 {
+                    false  => Ok(()),
+                    true => Err("This puzzle cannot be solved"),
+                },
+                _ => match inversion % 2 == (self.pos.y % 2) as u32 {
+                    true  => Ok(()),
+                    false => Err("This puzzle cannot be solved"),
+                },
+            },
         }
-
     }
 
     pub fn translate_in(&mut self) {
@@ -82,13 +96,13 @@ impl Map {
 
     fn do_move(&mut self, direction: &Movement) {
         self.content.swap((self.pos.x + self.pos.y * self.solver.size) as usize,
-            (match direction {
-                &Movement::Up => self.pos.x + (self.pos.y - 1) * self.solver.size,
-                &Movement::Down => self.pos.x + (self.pos.y + 1) * self.solver.size,
-                &Movement::Left => (self.pos.x - 1) + self.pos.y * self.solver.size,
-                &Movement::Right => (self.pos.x + 1) + self.pos.y * self.solver.size,
-                &Movement::No => self.pos.x + self.pos.y * self.solver.size
-            }) as usize
+        (match direction {
+            &Movement::Up => self.pos.x + (self.pos.y - 1) * self.solver.size,
+            &Movement::Down => self.pos.x + (self.pos.y + 1) * self.solver.size,
+            &Movement::Left => (self.pos.x - 1) + self.pos.y * self.solver.size,
+            &Movement::Right => (self.pos.x + 1) + self.pos.y * self.solver.size,
+            &Movement::No => self.pos.x + self.pos.y * self.solver.size
+        }) as usize
         );
 
         self.pos = match direction {
