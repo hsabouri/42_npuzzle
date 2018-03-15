@@ -56,7 +56,7 @@ fn push_sorted(openset: &mut Vec<Node>, node: Node) {
     openset.insert(index, node);
 }
 
-pub fn process(mut start_node: Node) {
+pub fn process(mut start_node: Node) -> Result<(), &'static str>{
     let mut closeset = Vec::<Node>::new();
     let mut openset  = Vec::<Node>::new();
     let h: u16;
@@ -65,11 +65,13 @@ pub fn process(mut start_node: Node) {
         map.display();
         println!("\n");
         map.translate_in();
+        map.check_validity()?; //seems ok for 3/3 not for 4/4
         map.set_first_costs();
         map.display();
         h = map.get_cost();
     } else {
         h = 0;
+        // TODO if here we should abort nooo ?
     }
 
     start_node.h = h;
@@ -98,6 +100,7 @@ pub fn process(mut start_node: Node) {
         println!("{:?}", node.movement);
         index = node.parent;
     }
+    Ok(())
 }
 
 pub fn parse(filename: &str, func: Heuristic) -> Result<Node, &'static str> {
@@ -109,7 +112,6 @@ pub fn parse(filename: &str, func: Heuristic) -> Result<Node, &'static str> {
     let map = Map::new(vec_spiral, &solver, point, None);
     Ok(Node::new_from_map(map))
 }
-
 
 pub fn create_random(size: u16, func: Heuristic) -> Result<Node, &'static str> {
     let solver: &Solver = Solver::new(size, func);
