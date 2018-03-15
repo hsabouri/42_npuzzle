@@ -12,6 +12,7 @@ mod node;
 mod map;
 mod solver;
 
+pub use std::collections::HashMap;
 pub use map::{Map,Point,Heuristic};
 pub use node::Node;
 // use rand::Rng;
@@ -42,7 +43,7 @@ pub use solver::Solver;
 //     unsafe {SOLVER.solved = map};
 // }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Hash)]
 pub enum Movement {
     Up,
     Down,
@@ -51,21 +52,28 @@ pub enum Movement {
     No,
 }
 
-fn push_sorted(openset: &mut Vec<Node>, node: Node) {
-    let index = openset.binary_search(&node).unwrap_or_else(|e| e);
-    openset.insert(index, node);
+fn push_sorted(openset: &mut Vec<Node>, mut node: Node, hashmap: &mut HashMap<Node, bool>) {
+    let parent = node.parent;
+    node.parent = 0;
+    if hashmap.contains_key(&node) == false {
+        hashmap.insert(node.clone(), true);
+        node.parent = parent;
+        let index = openset.binary_search(&node).unwrap_or_else(|e| e);
+        openset.insert(index, node);
+    }
 }
 
 pub fn process(mut start_node: Node) -> Result<(), &'static str>{
     let mut closeset = Vec::<Node>::new();
     let mut openset  = Vec::<Node>::new();
+    let mut hashmap: HashMap<Node, bool> = HashMap::new();
     let h: u16;
 
     if let Some(ref mut map) = start_node.map {
         map.display();
         println!("\n");
         map.translate_in();
-        map.check_validity()?; //seems ok for 3/3 not for 4/4
+        map.check_validity()?;
         map.set_first_costs();
         map.display();
         h = map.get_cost();
@@ -89,7 +97,7 @@ pub fn process(mut start_node: Node) -> Result<(), &'static str>{
         closeset.push(node);
         while childs.len() > 0 {
             let child = childs.remove(0);
-            push_sorted(&mut openset, child);
+            push_sorted(&mut openset, child, &mut hashmap);
         }
     }
     let end = closeset.pop().unwrap();

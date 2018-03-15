@@ -1,7 +1,7 @@
 use generator;
 use map::{Heuristic, Point};
 
-#[derive(Debug, Clone, Eq, PartialEq)]// TODO why all this stuff on eq etc ... ?
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]// TODO why all this stuff on eq etc ... ?
 pub struct Solver {
     pub size: u16,
     pub sq_size: usize,

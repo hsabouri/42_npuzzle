@@ -4,13 +4,13 @@ use rand::Rng;
 use super::Movement;
 use solver::Solver;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Point {
     pub x: u16,
     pub y: u16,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Map {
     pub content: Vec<u16>,
     pub solver: &'static Solver,
@@ -18,7 +18,7 @@ pub struct Map {
     pub costs: Option<Vec<u16>>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Heuristic {
     Manhattan,
     Naive,
@@ -186,7 +186,7 @@ impl Map {
         let zero_occurences = self.conflict(&costs, &zero_pos, &self.pos);
 
         costs[value as usize] = cost + occurences * 2;
-        costs[0] = zero_cost + occurences * 2;
+        costs[0] = zero_cost + zero_occurences * 2;
         costs
     }
 

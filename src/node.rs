@@ -2,7 +2,7 @@ use super::Map;
 use super::Movement;
 use std::cmp::Ordering;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Node {
     pub map: Option<Map>,
     pub parent: usize,
