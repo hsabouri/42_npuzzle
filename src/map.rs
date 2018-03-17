@@ -10,7 +10,7 @@ pub struct Point {
     pub y: u16,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Map {
     pub content: Vec<u16>,
     pub solver: &'static Solver,
@@ -152,12 +152,13 @@ impl Map {
 
     fn first_linear(&self) -> Vec<u16> {
         let mut res: Vec<u16> = self.first_naive();
+        let boost = self.solver.boost;
 
         for (index, value) in self.content.iter().enumerate() {
             let solved_index = self.solver.from_value_to_index(*value as u16);
             let value_pos = self.solver.index_to_point(index as u16);
             let solved_pos = self.solver.index_to_point(solved_index as u16);
-            let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * 10;
+            let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * boost;
             let occurences = self.conflict(&res, &value_pos, &solved_pos);
 
             res[*value as usize] = cost + occurences * 2;
@@ -167,6 +168,7 @@ impl Map {
 
     fn linear(&mut self, mov: &Movement) -> Vec<u16> {
         let size = self.solver.size;
+        let boost = self.solver.boost;
         let zero_pos = &self.solver.zero_pos;
         let to_look_at = match *mov {
             Movement::Up => self.pos.x + (self.pos.y + 1) * size,
@@ -180,8 +182,8 @@ impl Map {
         let value_pos = self.solver.index_to_point(to_look_at);
         let mut costs = self.costs.take().unwrap();
 
-        let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * 10;
-        let zero_cost = ((self.pos.x as i16 - zero_pos.x as i16).abs() + (self.pos.y as i16 - zero_pos.y as i16).abs()) as u16 * 10;
+        let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * boost;
+        let zero_cost = ((self.pos.x as i16 - zero_pos.x as i16).abs() + (self.pos.y as i16 - zero_pos.y as i16).abs()) as u16 * boost;
         let occurences = self.conflict(&costs, &value_pos, &solved_pos);
         let zero_occurences = self.conflict(&costs, &zero_pos, &self.pos);
 
@@ -192,6 +194,7 @@ impl Map {
 
     fn naive(&mut self, mov: &Movement) -> Vec<u16> {
         let size = self.solver.size;
+        let boost = self.solver.boost;
         let zero_index = self.solver.zero_index;
         let to_look_at = match *mov {
             Movement::Up => self.pos.x + (self.pos.y + 1) * size,
@@ -207,18 +210,19 @@ impl Map {
         if value == solved_value {
             costs[value as usize] = 0;
         } else {
-            costs[value as usize] = 1;
+            costs[value as usize] = boost;
         }
         if zero_index == self.solver.point_to_index(&self.pos) {
             costs[0] = 0;
         } else {
-            costs[0] = 1;
+            costs[0] = boost;
         }
         costs
     }
 
     fn first_naive(&self) -> Vec<u16> {
         let mut res: Vec<u16> = vec![0; self.solver.sq_size];
+        let boost = self.solver.boost;
 
         for (index, value) in self.content.iter().enumerate() {
             let solved_value = self.solver.from_index_to_value(index as u16);
@@ -226,7 +230,7 @@ impl Map {
             if solved_value == *value {
                 res[(*value) as usize] = 0;
             } else {
-                res[(*value) as usize] = 10;
+                res[(*value) as usize] = boost;
             }
         }
         res
@@ -234,6 +238,7 @@ impl Map {
 
     fn manhattan(&mut self, mov: &Movement) -> Vec<u16> {
         let size = self.solver.size;
+        let boost = self.solver.boost;
         let zero_pos = &self.solver.zero_pos;
         let to_look_at = match *mov {
             Movement::Up => self.pos.x + (self.pos.y + 1) * size,
@@ -247,19 +252,20 @@ impl Map {
         let value_pos = self.solver.index_to_point(to_look_at);
         let mut costs = self.costs.take().unwrap();
 
-        costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * 10;
-        costs[0] = ((self.pos.x as i16 - zero_pos.x as i16).abs() + (self.pos.y as i16 - zero_pos.y as i16).abs()) as u16 * 10;
+        costs[value as usize] = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * boost;
+        costs[0] = ((self.pos.x as i16 - zero_pos.x as i16).abs() + (self.pos.y as i16 - zero_pos.y as i16).abs()) as u16 * boost;
         costs
     }
 
     fn first_manhattan(&self) -> Vec<u16> {
         let mut res: Vec<u16> = vec![0; self.solver.sq_size];
+        let boost = self.solver.boost;
 
         for (index, value) in self.content.iter().enumerate() {
             let solved_index = self.solver.from_value_to_index(*value as u16);
             let value_pos = self.solver.index_to_point(index as u16);
             let solved_pos = self.solver.index_to_point(solved_index as u16);
-            let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * 10;
+            let cost = ((value_pos.x as i16 - solved_pos.x as i16).abs() + (value_pos.y as i16 - solved_pos.y as i16).abs()) as u16 * boost;
 
             res[*value as usize] = cost;
         }

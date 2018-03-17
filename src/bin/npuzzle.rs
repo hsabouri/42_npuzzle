@@ -3,9 +3,18 @@ extern crate clap;
 extern crate lib_npuzzle;
 extern crate colored;
 
-use lib_npuzzle::{Node, Heuristic};
+use lib_npuzzle::{Node, Heuristic, Solved, Movement};
 use colored::*;
 use clap::{Arg, App, ArgMatches};
+
+fn display(solved: Solved) {
+    println!("Maximum states represented in memory : {:?}", solved.memory);
+    println!("States selected for the openset : {:?}", solved.complexity);
+    println!("Solution is made of {:?} moves :", solved.sequence.len());
+    for value in solved.sequence.iter() {
+        println!("  {:?}", value);
+    }
+}
 
 fn init_map(matches: ArgMatches) -> Result<Node, &'static str> {
     let heuristic_func = match matches.value_of("H") {
@@ -19,24 +28,33 @@ fn init_map(matches: ArgMatches) -> Result<Node, &'static str> {
         },
         None => Heuristic::Manhattan,
     };
+    let boost = match matches.value_of("boost") {
+        Some(value) => {
+            let parsed = value.parse::<u16>().unwrap_or(1);
+            if parsed > 0 { parsed } else {1}
+        },
+        None => 1
+    };
     match matches.value_of("FILE") {
-        Some(filename) => lib_npuzzle::parse(filename, heuristic_func),
+        Some(filename) => lib_npuzzle::parse(filename, heuristic_func, boost),
         None => {
             let size = value_t!(matches.value_of("SIZE"), u16).unwrap_or_else(|e| e.exit());
             match size {
                 size if size > 20   => Err("Ah ah nice try. it's too big !."),
                 size if size < 3    => Err("Size must be equals or higher than 3."),
-                size                => lib_npuzzle::create_random(size, heuristic_func),
+                size                => lib_npuzzle::create_random(size, heuristic_func, boost),
             }
         }
     }
 }
+
 fn do_the_job(matches: ArgMatches) -> Result<(), &'static str> {
     let start_node = match init_map(matches) {
         Ok(x)       => x,
         Err(msg)    => {println!("{}", msg.red()); return Err("Failed to init map")}
     };
-    lib_npuzzle::process(start_node)?;
+    let result = lib_npuzzle::process(start_node)?;
+    display(result);
     Ok(())
 }
 
@@ -59,6 +77,11 @@ fn main() {
             .short("H")
             .takes_value(true)
             .long("heuristic"))
+        .arg(Arg::with_name("boost")
+            .help("Boost multiplier")
+            .short("b")
+            .takes_value(true)
+            .long("boost"))
         .arg(Arg::with_name("v")
             .help("Sets the level verbosity")
             .short("v")

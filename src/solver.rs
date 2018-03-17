@@ -9,6 +9,7 @@ pub struct Solver {
     pub zero_pos: Point,
     pub func: Heuristic,
     pub solved: Option<Vec<u16>>,
+    pub boost: u16,
 }
 
 static mut SOLVER: Solver = Solver {
@@ -18,10 +19,11 @@ static mut SOLVER: Solver = Solver {
     zero_pos: Point {x: 0, y: 0},
     func: Heuristic::Manhattan,
     solved: None,
+    boost: 1,
 };
 
 impl Solver {
-    pub fn new(size: u16, func: Heuristic) -> &'static Solver {
+    pub fn new(size: u16, func: Heuristic, boost: u16) -> &'static Solver {
         unsafe {
             SOLVER.size = size;
             SOLVER.sq_size = (size * size) as usize;
@@ -31,6 +33,7 @@ impl Solver {
             let mut vec = generator::create_solved_spiral(size as i16);//TODO import generator here
             vec[SOLVER.zero_index as usize] = 0;
             SOLVER.solved = Some(vec);
+            SOLVER.boost = boost;
             &SOLVER
         }
     }
