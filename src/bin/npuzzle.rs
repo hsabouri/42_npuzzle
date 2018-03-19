@@ -3,7 +3,7 @@ extern crate clap;
 extern crate lib_npuzzle;
 extern crate colored;
 
-use lib_npuzzle::{Node, Heuristic, Solved, Movement};
+use lib_npuzzle::{Node, Heuristic, Solved};
 use colored::*;
 use clap::{Arg, App, ArgMatches};
 
@@ -49,11 +49,18 @@ fn init_map(matches: ArgMatches) -> Result<Node, &'static str> {
 }
 
 fn do_the_job(matches: ArgMatches) -> Result<(), &'static str> {
+    let threads = match matches.value_of("threads") {
+        Some(value) => {
+            let parsed = value.parse::<usize>().unwrap_or(1);
+            if parsed > 0 { parsed } else {8}
+        },
+        None => 8
+    };
     let start_node = match init_map(matches) {
         Ok(x)       => x,
         Err(msg)    => {println!("{}", msg.red()); return Err("Failed to init map")}
     };
-    let result = lib_npuzzle::process(start_node)?;
+    let result = lib_npuzzle::process(start_node, threads)?;
     display(result);
     Ok(())
 }
@@ -72,6 +79,12 @@ fn main() {
             .default_value("3")
             .takes_value(true)
             .help("Size of a random generated N-puzzle [3 - 20]"))
+        .arg(Arg::with_name("threads")
+            .short("t")
+            .long("threads")
+            .default_value("8")
+            .takes_value(true)
+            .help("Size of the thread pool"))
         .arg(Arg::with_name("H")
             .help("Heuristic chosen to solve the puzzle")
             .short("H")

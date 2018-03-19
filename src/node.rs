@@ -25,39 +25,20 @@ impl Node {
         }
     }
 
-    pub fn child(&mut self, movement: Movement, parent: usize, hashmap: &mut HashMap<Vec<u16>, u16>) -> Option<Node> {
+    pub fn child(&mut self, movement: Movement) -> Option<Node> {
         match self.map {
             Some(ref map) => {
                 match map.child(&movement) {
                     Some(mut child_map) => {
                         let h = child_map.get_cost();
-                        let mut to_push = true;
-                        let to_res = match hashmap.get(&child_map.content) {
-                            Some(value) => {
-                                to_push = false;
-                                if *value > self.g + 1 {
-                                    true
-                                } else {
-                                    false
-                                }
-                            },
-                            None => true
-                        };
-                        if to_push {
-                            hashmap.insert(child_map.content.clone(), self.g + 1);
-                        }
-                        if to_res {
-                            Some (Node {
-                                map: Some(child_map),
-                                parent: parent,
-                                movement: movement,
-                                g: self.g + 1,
-                                h: h,
-                                f: self.g + 1 + h,
-                            })
-                        } else {
-                            None
-                        }
+                        Some (Node {
+                            map: Some(child_map),
+                            parent: 0,
+                            movement: movement,
+                            g: self.g + 1,
+                            h: h,
+                            f: self.g + 1 + h,
+                        })
                     },
                     None => None,
                 }
@@ -66,29 +47,29 @@ impl Node {
         }
     }
 
-    pub fn get_childs(&mut self, parent: usize, hashmap: &mut HashMap<Vec<u16>, u16>) -> Vec<Node> {
+    pub fn get_childs(&mut self) -> Vec<Node> {
         let mut res = Vec::<Node>::new();
 
         if self.movement != Movement::Down {
-            match self.child(Movement::Up, parent, hashmap) {
+            match self.child(Movement::Up) {
                 Some(node) => {res.push(node);},
                 None => {},
             }
         }
         if self.movement != Movement::Up {
-            match self.child(Movement::Down, parent, hashmap) {
+            match self.child(Movement::Down) {
                 Some(node) => {res.push(node);},
                 None => {},
             }
         }
         if self.movement != Movement::Right {
-            match self.child(Movement::Left, parent, hashmap) {
+            match self.child(Movement::Left) {
                 Some(node) => {res.push(node);},
                 None => {},
             }
         }
         if self.movement != Movement::Left {
-            match self.child(Movement::Right, parent, hashmap) {
+            match self.child(Movement::Right) {
                 Some(node) => {res.push(node);},
                 None => {},
             }

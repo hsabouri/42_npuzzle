@@ -12,38 +12,15 @@ mod node;
 mod map;
 mod solver;
 mod solved;
+mod kernels;
 
 pub use std::collections::HashMap;
 pub use map::{Map,Point,Heuristic};
 pub use node::Node;
-// use rand::Rng;
-// use std::cmp::Ordering;
 use colored::*;
 pub use solver::Solver;
 pub use solved::Solved;
-
-// pub fn process(&self, StartNode: Node) {
-//     if let Some(mut map) = StartNode.map {
-//         map.display(self.size);
-//         map.translate_in(&self.solved);
-//         println!("Order:");
-//         map.display(self.size);
-//         // let t = Map::new(self.translate_in(map.content), map.pos, None);
-//         // t.display(self.size);
-//         // map.first_get_costs(Heuristic::Naive);
-//     }
-// }
-
-// fn init_solver(size: u16) {
-//     unsafe {SOLVER.size = size;}
-//     let zero_pos = match size % 2 {
-//         0 => size / 2 - 1 + (size / 2) * size,
-//         _ => size / 2 + (size / 2) * size,
-//     };
-//     unsafe {SOLVER.zero_pos = zero_pos};
-//     let map = create_solved(size as i16);
-//     unsafe {SOLVER.solved = map};
-// }
+pub use kernels::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Hash)]
 pub enum Movement {
@@ -54,11 +31,7 @@ pub enum Movement {
     No,
 }
 
-fn push_sorted(openset: &mut Vec<Node>, node: Node) {
-    let index = openset.binary_search(&node).unwrap_or_else(|e| e);
-    openset.insert(index, node);
-}
-
+/*
 pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
     let mut closeset = Vec::<Node>::new();
     let mut openset  = Vec::<Node>::new();
@@ -92,7 +65,7 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
         let mut node = openset.pop().unwrap();
         //println!("{:?} {:?}", node.g, node.h);
         let index = closeset.len();
-        let mut childs = node.get_childs(index, &mut hashmap);
+        let mut childs = node.get_childs(index);
         closeset.push(node);
         while childs.len() > 0 {
             let child = childs.remove(0);
@@ -122,6 +95,7 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
         sequence: sequence,
     })
 }
+*/
 
 pub fn parse(filename: &str, func: Heuristic, boost: u16) -> Result<Node, &'static str> {
     let (vec_spiral, point, size) = match parser::parse(filename) {
