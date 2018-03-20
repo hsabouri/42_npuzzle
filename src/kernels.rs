@@ -3,12 +3,12 @@ use std::thread;
 use std::sync::mpsc;
 
 pub struct MsgToSlave {
-    node: Option<Node>,
+    node: Option<Box<Node>>,
 }
 
 pub struct MsgToMaster {
-    node: Node,
-    childs: Vec<Node>,
+    node: Box<Node>,
+    childs: Vec<Box<Node>>,
     thread_id: usize,
 }
 
@@ -19,7 +19,7 @@ pub fn slave(tx: mpsc::Sender<MsgToMaster>, rx: mpsc::Receiver<MsgToSlave>, thre
             Some(value) => value,
             None => return (),
         };
-        let childs = node.get_childs();
+        let childs = (*node).get_childs();
         tx.send(MsgToMaster {
             node: node,
             thread_id: thread_id,
@@ -28,30 +28,14 @@ pub fn slave(tx: mpsc::Sender<MsgToMaster>, rx: mpsc::Receiver<MsgToSlave>, thre
     }
 }
 
-fn push_sorted(openset: &mut Vec<Node>, node: Node) {
+fn push_sorted(openset: &mut Vec<Box<Node>>, node: Box<Node>) {
     let index = openset.binary_search(&node).unwrap_or_else(|e| e);
     openset.insert(index, node);
 }
 
-/*
-fn push_sorted(openset: &mut Vec<Node>, node: Node) {
-    if openset.len() < 1000 {
-        binary_sort(openset, node);
-    } else {
-        let start = openset.len() / 3 as f32;
-        let end = openset.len() * 9 / 10 as f32;
-        let i = openset[end].f as f32;
-        let j = openset[start].f as f32;
-        let a = (end - start) / (j - i);
-
-        
-    }
-}
-*/
-
 pub fn master(mut start: Node, rx: mpsc::Receiver<MsgToMaster>, txs: Vec<mpsc::Sender<MsgToSlave>>) -> Result<Solved, &'static str> {
-    let mut openset = Vec::<Node>::new();
-    let mut closeset = Vec::<Node>::new();
+    let mut openset = Vec::<Box<Node>>::new();
+    let mut closeset = Vec::<Box<Node>>::new();
     let mut status: bool = true;
     let h: u16;
 
@@ -70,7 +54,7 @@ pub fn master(mut start: Node, rx: mpsc::Receiver<MsgToMaster>, txs: Vec<mpsc::S
 
     start.h = h;
     start.f = h;
-    openset.push(start);
+    openset.push(Box::new(start));
 
     for _ in 0..(txs.len() * 2) { // Doing some calculation on only one thread to feed the openset
         let mut node = openset.pop().unwrap();
@@ -84,8 +68,8 @@ pub fn master(mut start: Node, rx: mpsc::Receiver<MsgToMaster>, txs: Vec<mpsc::S
         closeset.push(response.node);
         while childs.len() > 0 {
             let mut child = childs.pop().unwrap();
-            child.parent = parent;
-            if child.h == 0 {
+            (*child).parent = parent;
+            if (*child).h == 0 {
                 closeset.push(child);
                 status = false;
                 break;
@@ -116,8 +100,8 @@ pub fn master(mut start: Node, rx: mpsc::Receiver<MsgToMaster>, txs: Vec<mpsc::S
             closeset.push(response.node);
             while childs.len() > 0 {
                 let mut child = childs.pop().unwrap();
-                child.parent = parent;
-                if child.h == 0 {
+                (*child).parent = parent;
+                if (*child).h == 0 {
                     closeset.push(child);
                     status = false;
                     break;
@@ -144,15 +128,15 @@ pub fn master(mut start: Node, rx: mpsc::Receiver<MsgToMaster>, txs: Vec<mpsc::S
     let mut sequence: Vec<Movement> = Vec::<Movement>::new();
     let mut id = closeset.len();
     let mut node = closeset.pop().unwrap();
-    sequence.push(node.movement);
+    sequence.push((*node).movement);
 
     while id > 0 {
-        id = node.parent;
+        id = (*node).parent;
         node = closeset.remove(id);
-        sequence.push(node.movement);
+        sequence.push((*node).movement);
     }
 
-    println!("{:#?}", openset); // Dumping openset for analysis
+    //println!("{:#?}", openset); // Dumping openset for analysis
 
     Ok(Solved {
         memory: memory,

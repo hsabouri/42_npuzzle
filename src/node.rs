@@ -47,30 +47,30 @@ impl Node {
         }
     }
 
-    pub fn get_childs(&mut self) -> Vec<Node> {
-        let mut res = Vec::<Node>::new();
+    pub fn get_childs(&mut self) -> Vec<Box<Node>> {
+        let mut res = Vec::<Box<Node>>::new();
 
         if self.movement != Movement::Down {
             match self.child(Movement::Up) {
-                Some(node) => {res.push(node);},
+                Some(node) => {res.push(Box::new(node));},
                 None => {},
             }
         }
         if self.movement != Movement::Up {
             match self.child(Movement::Down) {
-                Some(node) => {res.push(node);},
+                Some(node) => {res.push(Box::new(node));},
                 None => {},
             }
         }
         if self.movement != Movement::Right {
             match self.child(Movement::Left) {
-                Some(node) => {res.push(node);},
+                Some(node) => {res.push(Box::new(node));},
                 None => {},
             }
         }
         if self.movement != Movement::Left {
             match self.child(Movement::Right) {
-                Some(node) => {res.push(node);},
+                Some(node) => {res.push(Box::new(node));},
                 None => {},
             }
         }
