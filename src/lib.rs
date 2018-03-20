@@ -22,29 +22,6 @@ use colored::*;
 pub use solver::Solver;
 pub use solved::Solved;
 
-// pub fn process(&self, StartNode: Node) {
-//     if let Some(mut map) = StartNode.map {
-//         map.display(self.size);
-//         map.translate_in(&self.solved);
-//         println!("Order:");
-//         map.display(self.size);
-//         // let t = Map::new(self.translate_in(map.content), map.pos, None);
-//         // t.display(self.size);
-//         // map.first_get_costs(Heuristic::Naive);
-//     }
-// }
-
-// fn init_solver(size: u16) {
-//     unsafe {SOLVER.size = size;}
-//     let zero_pos = match size % 2 {
-//         0 => size / 2 - 1 + (size / 2) * size,
-//         _ => size / 2 + (size / 2) * size,
-//     };
-//     unsafe {SOLVER.zero_pos = zero_pos};
-//     let map = create_solved(size as i16);
-//     unsafe {SOLVER.solved = map};
-// }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Hash)]
 pub enum Movement {
     Up,
@@ -54,14 +31,14 @@ pub enum Movement {
     No,
 }
 
-fn push_sorted(openset: &mut Vec<Node>, node: Node) {
+fn push_sorted(openset: &mut Vec<Box<Node>>, node: Box<Node>) {
     let index = openset.binary_search(&node).unwrap_or_else(|e| e);
     openset.insert(index, node);
 }
 
 pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
-    let mut closeset = Vec::<Node>::new();
-    let mut openset  = Vec::<Node>::new();
+    let mut closeset = Vec::<Box<Node>>::new();
+    let mut openset  = Vec::<Box<Node>>::new();
     let mut hashmap: HashMap<Vec<u16>, u16> = HashMap::new();
     let mut complextity: usize = 0;
     let mut memory: usize = 0;
@@ -76,26 +53,23 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
         map.display();
         h = map.get_cost();
     } else {
-        h = 0;
-        // TODO if here we should abort nooo ?
+        return Err("Weird problem going on...");
     }
 
     start_node.h = h;
     start_node.f = h;
-    openset.push(start_node);
+    openset.push(Box::new(start_node));
     loop {
         if let Some(last) = closeset.last() {
-            if last.h == 0 {
+            if (*last).h == 0 {
                 break;
             }
         }
         let mut node = openset.pop().unwrap();
-        //println!("{:?} {:?}", node.g, node.h);
         let index = closeset.len();
-        let mut childs = node.get_childs(index, &mut hashmap);
+        let childs = node.get_childs(index, &mut hashmap);
         closeset.push(node);
-        while childs.len() > 0 {
-            let child = childs.remove(0);
+        for child in childs.into_iter() {
             push_sorted(&mut openset, child);
             complextity += 1;
         }
@@ -105,14 +79,12 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
     }
     let mut sequence = Vec::<Movement>::new();
     let end = closeset.pop().unwrap();
-    sequence.push(end.movement);
-    let mut index = end.parent;
-    let mut moves = 0;
+    sequence.push((*end).movement);
+    let mut index = (*end).parent;
     while index != 0 {
         let node = closeset.remove(index);
-        index = node.parent;
-        sequence.push(node.movement);
-        moves += 1;
+        index = (*node).parent;
+        sequence.push((*node).movement);
     }
     sequence.reverse();
     //println!("{:#?}", openset);

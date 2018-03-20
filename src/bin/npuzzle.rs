@@ -3,7 +3,7 @@ extern crate clap;
 extern crate lib_npuzzle;
 extern crate colored;
 
-use lib_npuzzle::{Node, Heuristic, Solved, Movement};
+use lib_npuzzle::{Node, Heuristic, Solved};
 use colored::*;
 use clap::{Arg, App, ArgMatches};
 
