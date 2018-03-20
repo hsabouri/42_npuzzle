@@ -13,7 +13,7 @@ mod map;
 mod solver;
 mod solved;
 
-pub use std::collections::HashMap;
+pub use std::collections::{HashMap, BinaryHeap};
 pub use map::{Map,Point,Heuristic};
 pub use node::Node;
 // use rand::Rng;
@@ -31,14 +31,9 @@ pub enum Movement {
     No,
 }
 
-fn push_sorted(openset: &mut Vec<Box<Node>>, node: Box<Node>) {
-    let index = openset.binary_search(&node).unwrap_or_else(|e| e);
-    openset.insert(index, node);
-}
-
 pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
     let mut closeset = Vec::<Box<Node>>::new();
-    let mut openset  = Vec::<Box<Node>>::new();
+    let mut openset  = BinaryHeap::<Box<Node>>::new();
     let mut hashmap: HashMap<Vec<u16>, u16> = HashMap::new();
     let mut complextity: usize = 0;
     let mut memory: usize = 0;
@@ -70,7 +65,7 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
         let childs = node.get_childs(index, &mut hashmap);
         closeset.push(node);
         for child in childs.into_iter() {
-            push_sorted(&mut openset, child);
+            openset.push(child);
             complextity += 1;
         }
         if openset.len() + closeset.len() + hashmap.len() > memory {
