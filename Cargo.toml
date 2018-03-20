@@ -3,6 +3,9 @@ name = "lib_npuzzle"
 version = "0.1.0"
 authors = ["Hugo Sabourin <hsabouri@student.42.fr>", "William Escande <wescande@student.42.fr>"]
 
+[profile.release]
+debug = true
+
 [dependencies]
 colored = "1.6"
 rand = "0.4.2"
