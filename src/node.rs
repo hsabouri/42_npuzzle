@@ -34,7 +34,7 @@ impl Node {
                 let to_res = match hashmap.get(&child_map.content) {
                     Some(value) => {
                         to_push = false;
-                        if *value > self.g + cost {
+                        if *value > self.g + 1 {
                             true
                         } else {
                             false
