@@ -6,36 +6,28 @@
 #    By: hsabouri <hsabouri@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2042/01/01 10:32:42 by hsabouri          #+#    #+#              #
-#    Updated: 2042/01/01 16:55:31 by hsabouri         ###   ########.fr        #
+#    Updated: 2018/03/21 17:17:38 by wescande         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = npuzzle
 
-ccred=$(echo -e "\x1b[31m")
-ccblue=$(echo -e "\x1b[34m")
-ccreset=$(echo -e "\x1b[0m")
+red="\033[31m"
+blue="\033[34m"
+reset="\033[0m"
 
-.PHONE: all
 all: $(NAME)
 
 $(NAME):
-	$(ccblue)
-	@echo "Compiling..."
-	$(ccreset)
+	@echo $(blue)"Compiling..."$(reset)
 	@cargo build --release
 	@ln -s target/release/npuzzle
 
-.PHONE: clean
 clean: 
 	@rm -rf npuzzle
-	$(ccred)
-	@echo "Deleted symlink"
-	$(ccreset)
+	@echo $(red)"Deleted symlink"$(reset)
 	@rm -rf target
-	$(ccred)
-	@echo "Deleting target directory"
-	$(ccreset)
+	@echo $(red)"Deleting target directory"$(reset)
 
-.PHONE: re
 re: clean all
+.PHONY: all clean re
