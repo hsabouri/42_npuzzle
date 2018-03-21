@@ -315,20 +315,26 @@ impl Map {
         });
     }
 
-    pub fn get_cost(&mut self) -> u16 {
+    pub fn get_cost(&mut self) -> usize {
         let costs = self.costs.take().unwrap();
-        let res = costs.iter().fold(0, |mut sum, &val| {sum += val; sum});
+        let res = costs.iter().fold(0, |mut sum: usize, &val| {sum += val as usize; sum});
         self.costs = Some(costs);
         res
     }
 
-    pub fn display(&self) {
+    pub fn display(&self, mov: &Movement) {
         for y in 0..self.solver.size {
             let mut to_display = String::from("");
             for x in 0..self.solver.size {
                 let content = self.content[(x + y * self.solver.size) as usize];
                 if content == 0 {
-                    to_display.push_str(format!("{:4}", "   ■").as_str());
+                    match mov {
+                        &Movement::Down => to_display.push_str(format!("{:4}", "   ↑").as_str()),
+                        &Movement::Up => to_display.push_str(format!("{:4}", "   ↓").as_str()),
+                        &Movement::Right => to_display.push_str(format!("{:4}", "   ←").as_str()),
+                        &Movement::Left => to_display.push_str(format!("{:4}", "   →").as_str()),
+                        &Movement::No => to_display.push_str(format!("{:4}", "   ■").as_str()),
+                    }
                 } else {
                     to_display.push_str(format!("{:4}", content).as_str());
                 }

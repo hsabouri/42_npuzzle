@@ -13,7 +13,7 @@ fn display(solved: Solved, verbose: bool) {
         if verbose {
             map.do_move(movement);
             println!("{:?}:", movement);
-            map.display();
+            map.display(&movement);
         } else {
             println!("{:?}", movement);
         }
@@ -88,7 +88,7 @@ fn main() {
             .long("size")
             .default_value("3")
             .takes_value(true)
-            .help("Size of a random generated N-puzzle [2 - 20]"))
+            .help("Size of a random generated N-puzzle [3 - 20]"))
         .arg(Arg::with_name("H")
             .help("Heuristic chosen to solve the puzzle")
             .short("H")

@@ -8,13 +8,13 @@ pub struct Node {
     pub map: Option<Map>,
     pub parent: usize,
     pub movement: Movement,
-    pub g: u16,
-    pub h: u16,
-    pub f: u16,
+    pub g: usize,
+    pub h: usize,
+    pub f: usize,
 }
 
 impl Node {
-    pub fn new(map: Map, parent: usize, movement: Movement, g: u16, h: u16, f: u16) -> Node {
+    pub fn new(map: Map, parent: usize, movement: Movement, g: usize, h: usize, f: usize) -> Node {
         Node {
             map: Some(map),
             parent: parent,
@@ -25,7 +25,7 @@ impl Node {
         }
     }
 
-    pub fn child(&mut self, movement: Movement, parent: usize, hashmap: &mut HashMap<Vec<u16>, u16>) -> Option<Node> {
+    pub fn child(&mut self, movement: Movement, parent: usize, hashmap: &mut HashMap<Vec<u16>, usize>) -> Option<Node> {
         if let Some(ref map) = self.map {
             if let Some (mut child_map) = map.child(&movement) {
                 let h = child_map.get_cost();
@@ -65,7 +65,7 @@ impl Node {
         }
     }
 
-    pub fn get_childs(&mut self, parent: usize, hashmap: &mut HashMap<Vec<u16>, u16>) -> Vec<Box<Node>> {
+    pub fn get_childs(&mut self, parent: usize, hashmap: &mut HashMap<Vec<u16>, usize>) -> Vec<Box<Node>> {
         let mut res = Vec::<Box<Node>>::new();
 
         if self.movement != Movement::Down {

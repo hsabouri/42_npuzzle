@@ -43,15 +43,15 @@ pub fn create_progress_bar() -> ProgressBar {
 pub fn process(mut start_node: Node, extra: bool, display_bar: bool) -> Result<Solved, &'static str> {
     let mut closeset = Vec::<Box<Node>>::new();
     let mut openset  = BinaryHeap::<Box<Node>>::new();
-    let mut hashmap: HashMap<Vec<u16>, u16> = HashMap::new();
+    let mut hashmap: HashMap<Vec<u16>, usize> = HashMap::new();
     let mut complextity: usize = 0;
     let mut memory: usize = 0;
     let un_translated_node = start_node.clone();
-    let h: u16;
+    let h: usize;
 
     if let Some(ref mut map) = start_node.map {
         println!("Starting from :\n");
-        map.display();
+        map.display(&start_node.movement);
         map.translate_in();
         map.check_validity()?;
         map.set_first_costs();
