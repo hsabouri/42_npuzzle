@@ -27,10 +27,10 @@ fn init_map(matches: &ArgMatches) -> Result<Node, &'static str> {
     let heuristic_func = match matches.value_of("H") {
         Some(func) => {
             match func {
-                "manhattan" | "m" => Heuristic::Manhattan,
-                "naive" | "n" => Heuristic::Naive,
-                "linear" | "l" => Heuristic::Linear,
-                "uniform" | "u" => Heuristic::Uniform,
+                "manhattan" | "m"   => Heuristic::Manhattan,
+                "naive" | "n"       => Heuristic::Naive,
+                "linear" | "l"      => Heuristic::Linear,
+                "uniform" | "u"     => Heuristic::Uniform,
                 _ => return Err("Heuristic does not exist"),
             }
         },
@@ -45,7 +45,7 @@ fn init_map(matches: &ArgMatches) -> Result<Node, &'static str> {
     };
     let greedy = match matches.occurrences_of("greedy") {
         0 => false,
-        _ => if heuristic_func != Heuristic::Uniform {true} else {false},
+        _ => heuristic_func != Heuristic::Uniform,
     };
     match matches.value_of("FILE") {
         Some(filename) => lib_npuzzle::parse(filename, heuristic_func, boost, greedy),
