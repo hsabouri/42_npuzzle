@@ -26,43 +26,41 @@ impl Node {
     }
 
     pub fn child(&mut self, movement: Movement, parent: usize, hashmap: &mut HashMap<Vec<u16>, u16>) -> Option<Node> {
-        match self.map {
-            Some(ref map) => {
-                match map.child(&movement) {
-                    Some(mut child_map) => {
-                        let h = child_map.get_cost();
-                        let mut to_push = true;
-                        let to_res = match hashmap.get(&child_map.content) {
-                            Some(value) => {
-                                to_push = false;
-                                if *value > self.g + 1 {
-                                    true
-                                } else {
-                                    false
-                                }
-                            },
-                            None => true
-                        };
-                        if to_push {
-                            hashmap.insert(child_map.content.clone(), self.g + 1);
-                        }
-                        if to_res {
-                            Some (Node {
-                                map: Some(child_map),
-                                parent: parent,
-                                movement: movement,
-                                g: self.g + 1,
-                                h: h,
-                                f: self.g + 1 + h,
-                            })
+        if let Some(ref map) = self.map {
+            if let Some (mut child_map) = map.child(&movement) {
+                let h = child_map.get_cost();
+                let mut to_push = true;
+                let to_res = match hashmap.get(&child_map.content) {
+                    Some(value) => {
+                        to_push = false;
+                        if *value > self.g + 1 {
+                            true
                         } else {
-                            None
+                            false
                         }
                     },
-                    None => None,
+                    None => true
+                };
+                if to_push {
+                    hashmap.insert(child_map.content.clone(), self.g + 1);
                 }
-            },
-            None => None,
+                if to_res {
+                    Some (Node {
+                        map: Some(child_map),
+                        parent: parent,
+                        movement: movement,
+                        g: self.g + 1,
+                        h: h,
+                        f: self.g + 1 + h,
+                    })
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 
@@ -70,27 +68,23 @@ impl Node {
         let mut res = Vec::<Box<Node>>::new();
 
         if self.movement != Movement::Down {
-            match self.child(Movement::Up, parent, hashmap) {
-                Some(node) => {res.push(Box::new(node));},
-                None => {},
+            if let Some(node) = self.child(Movement::Up, parent, hashmap) {
+                res.push(Box::new(node));
             }
         }
         if self.movement != Movement::Up {
-            match self.child(Movement::Down, parent, hashmap) {
-                Some(node) => {res.push(Box::new(node));},
-                None => {},
+            if let Some(node) = self.child(Movement::Down, parent, hashmap) {
+                res.push(Box::new(node));
             }
         }
         if self.movement != Movement::Right {
-            match self.child(Movement::Left, parent, hashmap) {
-                Some(node) => {res.push(Box::new(node));},
-                None => {},
+            if let Some(node) = self.child(Movement::Left, parent, hashmap) {
+                res.push(Box::new(node));
             }
         }
         if self.movement != Movement::Left {
-            match self.child(Movement::Right, parent, hashmap) {
-                Some(node) => {res.push(Box::new(node));},
-                None => {},
+            if let Some(node) = self.child(Movement::Right, parent, hashmap) {
+                res.push(Box::new(node));
             }
         }
         self.map = None;

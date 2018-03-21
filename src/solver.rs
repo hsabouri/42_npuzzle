@@ -1,4 +1,3 @@
-use generator;
 use map::{Heuristic, Point};
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]// TODO why all this stuff on eq etc ... ?
@@ -22,6 +21,23 @@ static mut SOLVER: Solver = Solver {
     boost: 1,
 };
 
+fn spiral(w: i16, h: i16, x: i16, y: i16) -> u16 {
+    match y {
+        0 => (x + 1) as u16,
+        y => w as u16 + spiral(h - 1, w, y - 1, w - x - 1)
+    }
+}
+
+fn create_solved_spiral(size: i16) -> Vec<u16> {
+    let mut map: Vec<u16> = Vec::new();
+    for x in 0..size {
+        for y in 0..size {
+            map.push(spiral(size, size, y, x));
+        }
+    }
+    map
+}
+
 impl Solver {
     pub fn new(size: u16, func: Heuristic, boost: u16) -> &'static Solver {
         unsafe {
@@ -30,7 +46,7 @@ impl Solver {
             SOLVER.zero_index = (size / 2) * (size + 1) + size % 2 - 1;
             SOLVER.zero_pos = Point {x: SOLVER.zero_index % SOLVER.size, y: SOLVER.zero_index / SOLVER.size};
             SOLVER.func = func;
-            let mut vec = generator::create_solved_spiral(size as i16);//TODO import generator here
+            let mut vec = create_solved_spiral(size as i16);
             vec[SOLVER.zero_index as usize] = 0;
             SOLVER.solved = Some(vec);
             SOLVER.boost = boost;
@@ -109,9 +125,7 @@ impl Solver {
     }
 
     pub fn point_to_index(&self, point: &Point) -> u16 {
-        let size = self.size;
-
-        point.x + point.y * size
+        point.x + point.y * self.size
     }
 
     pub fn index_to_point(&self, index: u16) -> Point {
