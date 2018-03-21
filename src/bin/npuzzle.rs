@@ -36,23 +36,24 @@ fn init_map(matches: &ArgMatches) -> Result<Node, &'static str> {
         },
         None => Heuristic::Linear,
     };
-    let boost = match matches.value_of("boost") {
-        Some(value) => {
-            let parsed = value.parse::<u16>().unwrap_or(1);
-            if parsed > 0 { parsed } else {1}
-        },
-        None => 1
-    };
-    let greedy = match matches.occurrences_of("greedy") {
-        0 => false,
-        _ => heuristic_func != Heuristic::Uniform,
+    let boost = value_t!(matches.value_of("boost"), u16).unwrap_or_else(|e| e.exit());
+    match boost {
+        boost if boost > 200    => return Err("Ah ah nice try. Boost value is too big !."),
+        boost if boost < 1      => return Err("Boost can't be 0."),
+        _                       => ()
+    }
+    let greedy = match matches.is_present("greedy") {
+        // false => false,
+        true if heuristic_func != Heuristic::Uniform => true,
+        _ => false,
+        // _ => heuristic_func != Heuristic::Uniform,
     };
     match matches.value_of("FILE") {
         Some(filename) => lib_npuzzle::parse(filename, heuristic_func, boost, greedy),
         None => {
             let size = value_t!(matches.value_of("SIZE"), u16).unwrap_or_else(|e| e.exit());
             match size {
-                size if size > 20   => Err("Ah ah nice try. it's too big !."),
+                size if size > 20   => Err("Ah ah nice try. Map size is too big !."),
                 size if size < 3    => Err("Size must be equals or higher than 3."),
                 size                => lib_npuzzle::create_random(size, heuristic_func, boost, greedy),
             }
@@ -98,6 +99,7 @@ fn main() {
             .help("Boost multiplier")
             .short("b")
             .takes_value(true)
+            .default_value("1")
             .long("boost"))
         .arg(Arg::with_name("v")
             .help("Sets the level of verbosity")
