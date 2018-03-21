@@ -10,6 +10,7 @@ pub struct Solver {
     pub func: Heuristic,
     pub solved: Option<Vec<u16>>,
     pub boost: u16,
+    pub greedy: bool,
 }
 
 static mut SOLVER: Solver = Solver {
@@ -20,10 +21,11 @@ static mut SOLVER: Solver = Solver {
     func: Heuristic::Manhattan,
     solved: None,
     boost: 1,
+    greedy: false,
 };
 
 impl Solver {
-    pub fn new(size: u16, func: Heuristic, boost: u16) -> &'static Solver {
+    pub fn new(size: u16, func: Heuristic, boost: u16, greedy: bool) -> &'static Solver {
         unsafe {
             SOLVER.size = size;
             SOLVER.sq_size = (size * size) as usize;
@@ -34,6 +36,7 @@ impl Solver {
             vec[SOLVER.zero_index as usize] = 0;
             SOLVER.solved = Some(vec);
             SOLVER.boost = boost;
+            SOLVER.greedy = greedy;
             &SOLVER
         }
     }

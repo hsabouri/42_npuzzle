@@ -110,18 +110,18 @@ pub fn process(mut start_node: Node, extra: bool) -> Result<Solved, &'static str
     })
 }
 
-pub fn parse(filename: &str, func: Heuristic, boost: u16) -> Result<Node, &'static str> {
+pub fn parse(filename: &str, func: Heuristic, boost: u16, greedy: bool) -> Result<Node, &'static str> {
     let (vec_spiral, point, size) = match parser::parse(filename) {
         Ok(x) => x,
         Err(msg) => {println!("{}", msg.red()); return Err("Failed to parse")},
     };
-    let solver = Solver::new(size, func, boost);
+    let solver = Solver::new(size, func, boost, greedy);
     let map = Map::new(vec_spiral, &solver, point, None);
     Ok(Node::new_from_map(map))
 }
 
-pub fn create_random(size: u16, func: Heuristic, boost: u16) -> Result<Node, &'static str> {
-    let solver: &Solver = Solver::new(size, func, boost);
+pub fn create_random(size: u16, func: Heuristic, boost: u16, greedy: bool) -> Result<Node, &'static str> {
+    let solver: &Solver = Solver::new(size, func, boost, greedy);
     let zero_index = solver.zero_index;
     let mut vec_spiral = generator::create_solved_spiral(size as i16); //TODO remove this generation and clone solver
     vec_spiral[zero_index as usize] = 0;

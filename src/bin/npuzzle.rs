@@ -30,10 +30,11 @@ fn init_map(matches: &ArgMatches) -> Result<Node, &'static str> {
                 "manhattan" | "m" => Heuristic::Manhattan,
                 "naive" | "n" => Heuristic::Naive,
                 "linear" | "l" => Heuristic::Linear,
+                "uniform" | "u" => Heuristic::Uniform,
                 _ => return Err("Heuristic does not exist"),
             }
         },
-        None => Heuristic::Manhattan,
+        None => Heuristic::Linear,
     };
     let boost = match matches.value_of("boost") {
         Some(value) => {
@@ -42,14 +43,18 @@ fn init_map(matches: &ArgMatches) -> Result<Node, &'static str> {
         },
         None => 1
     };
+    let greedy = match matches.occurrences_of("greedy") {
+        0 => false,
+        _ => if heuristic_func != Heuristic::Uniform {true} else {false},
+    };
     match matches.value_of("FILE") {
-        Some(filename) => lib_npuzzle::parse(filename, heuristic_func, boost),
+        Some(filename) => lib_npuzzle::parse(filename, heuristic_func, boost, greedy),
         None => {
             let size = value_t!(matches.value_of("SIZE"), u16).unwrap_or_else(|e| e.exit());
             match size {
                 size if size > 20   => Err("Ah ah nice try. it's too big !."),
                 size if size < 3    => Err("Size must be equals or higher than 3."),
-                size                => lib_npuzzle::create_random(size, heuristic_func, boost),
+                size                => lib_npuzzle::create_random(size, heuristic_func, boost, greedy),
             }
         }
     }
@@ -98,6 +103,10 @@ fn main() {
             .help("Sets the level of verbosity")
             .multiple(true)
             .short("v"))
+        .arg(Arg::with_name("greedy")
+             .help("Sets greedy search only if heuristic is not uniform")
+             .short("g")
+             .long("greedy"))
         .get_matches();
 
     if let Err(msg) = do_the_job(matches) {

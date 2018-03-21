@@ -23,6 +23,7 @@ pub enum Heuristic {
     Manhattan,
     Naive,
     Linear,
+    Uniform,
 }
 
 impl Map {
@@ -272,12 +273,33 @@ impl Map {
         res
     }
 
+    pub fn uniform(&mut self) -> Vec<u16> {
+        self.costs.take().unwrap();
+        self.first_uniform()
+    }
+
+    pub fn first_uniform(&self) -> Vec<u16> {
+        let costs = self.first_naive();
+        let mut status = false;
+        for value in costs.into_iter() {
+            if value > 0 {
+                status = true;
+            }
+        }
+        if status {
+            vec![1; self.solver.sq_size]
+        } else {
+            vec![0; self.solver.sq_size]
+        }
+    }
+
     pub fn set_first_costs(&mut self) {
         let func = self.solver.func;
 
         self.costs = Some(match func {
             Heuristic::Naive => self.first_naive(),
             Heuristic::Manhattan => self.first_manhattan(),
+            Heuristic::Uniform => self.first_uniform(),
             _ => self.first_linear(),
         });
     }
@@ -288,6 +310,7 @@ impl Map {
         self.costs = Some(match func {
             Heuristic::Naive => self.naive(mov),
             Heuristic::Manhattan => self.manhattan(mov),
+            Heuristic::Uniform => self.uniform(),
             _ => self.linear(mov),
         });
     }

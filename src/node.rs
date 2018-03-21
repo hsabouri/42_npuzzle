@@ -31,11 +31,12 @@ impl Node {
                 match map.child(&movement) {
                     Some(mut child_map) => {
                         let h = child_map.get_cost();
+                        let cost = if child_map.solver.greedy {0} else {1};
                         let mut to_push = true;
                         let to_res = match hashmap.get(&child_map.content) {
                             Some(value) => {
                                 to_push = false;
-                                if *value > self.g + 1 {
+                                if *value > self.g + cost {
                                     true
                                 } else {
                                     false
@@ -51,9 +52,9 @@ impl Node {
                                 map: Some(child_map),
                                 parent: parent,
                                 movement: movement,
-                                g: self.g + 1,
+                                g: self.g + cost,
                                 h: h,
-                                f: self.g + 1 + h,
+                                f: self.g + cost + h,
                             })
                         } else {
                             None
