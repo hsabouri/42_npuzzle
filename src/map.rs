@@ -305,7 +305,7 @@ impl Map {
             for x in 0..self.solver.size {
                 let content = self.content[(x + y * self.solver.size) as usize];
                 if content == 0 {
-                    to_display.push_str(format!("{:4}", " ").as_str());
+                    to_display.push_str(format!("{:4}", "   ■").as_str());
                 } else {
                     to_display.push_str(format!("{:4}", content).as_str());
                 }
