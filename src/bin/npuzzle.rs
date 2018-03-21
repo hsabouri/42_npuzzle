@@ -70,7 +70,7 @@ fn do_the_job(matches: ArgMatches) -> Result<(), &'static str> {
         1 => (true, false),
         _ => (true, true),
     };
-    let result = lib_npuzzle::process(start_node, extra)?;
+    let result = lib_npuzzle::process(start_node, extra, matches.is_present("bar"))?;
     display(result, verbose);
     Ok(())
 }
@@ -107,6 +107,10 @@ fn main() {
              .help("Sets greedy search only if heuristic is not uniform")
              .short("g")
              .long("greedy"))
+        .arg(Arg::with_name("bar")
+            .help("Will display an interactive bar")
+            .long("bar")
+            .short("B"))
         .get_matches();
 
     if let Err(msg) = do_the_job(matches) {
