@@ -94,7 +94,7 @@ impl Map {
         }
     }
 
-    fn do_move(&mut self, direction: &Movement) {
+    pub fn do_move(&mut self, direction: &Movement) {
         self.content.swap((self.pos.x + self.pos.y * self.solver.size) as usize,
         (match direction {
             &Movement::Up => self.pos.x + (self.pos.y - 1) * self.solver.size,
@@ -303,7 +303,12 @@ impl Map {
         for y in 0..self.solver.size {
             let mut to_display = String::from("");
             for x in 0..self.solver.size {
-                to_display.push_str(format!("{:4}", self.content[(x + y * self.solver.size) as usize]).as_str());
+                let content = self.content[(x + y * self.solver.size) as usize];
+                if content == 0 {
+                    to_display.push_str(format!("{:4}", " ").as_str());
+                } else {
+                    to_display.push_str(format!("{:4}", content).as_str());
+                }
             }
             println!("{}\n", to_display);
         }

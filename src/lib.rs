@@ -4,6 +4,7 @@ extern crate rand_derive;
 // #[macro_use]
 // extern crate lazy_static;
 extern crate colored;
+extern crate indicatif;
 
 // mod translator;
 mod parser;
@@ -21,6 +22,7 @@ pub use node::Node;
 use colored::*;
 pub use solver::Solver;
 pub use solved::Solved;
+pub use indicatif::{ProgressBar, ProgressStyle};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Hash)]
 pub enum Movement {
@@ -31,21 +33,29 @@ pub enum Movement {
     No,
 }
 
-pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
+pub fn create_progress_bar() -> ProgressBar {
+    let bar = ProgressBar::new_spinner();
+    bar.set_message("Solving");
+    bar.set_style(ProgressStyle::default_bar()
+                  .template("Solving {spinner:.green} [{elapsed_precise}] | Closeset size - {len:.green} | Openset size - {msg:.green} | Current H - {pos:.red}"));
+    bar
+}
+
+pub fn process(mut start_node: Node, extra: bool) -> Result<Solved, &'static str> {
     let mut closeset = Vec::<Box<Node>>::new();
     let mut openset  = BinaryHeap::<Box<Node>>::new();
     let mut hashmap: HashMap<Vec<u16>, u16> = HashMap::new();
     let mut complextity: usize = 0;
     let mut memory: usize = 0;
+    let un_translated_node = start_node.clone();
     let h: u16;
 
     if let Some(ref mut map) = start_node.map {
+        println!("Starting from :\n");
         map.display();
-        println!("\n");
         map.translate_in();
         map.check_validity()?;
         map.set_first_costs();
-        map.display();
         h = map.get_cost();
     } else {
         return Err("Weird problem going on...");
@@ -54,6 +64,7 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
     start_node.h = h;
     start_node.f = h;
     openset.push(Box::new(start_node));
+    let bar = create_progress_bar();
     loop {
         if let Some(last) = closeset.last() {
             if (*last).h == 0 {
@@ -61,6 +72,13 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
             }
         }
         let mut node = openset.pop().unwrap();
+        if extra {
+            println!("Current node:\n\tH: {:?}, G: {:?}, F: {:?}\nOther infos:\n\tOpenset size: {:?}\n\tCloseset size: {:?}", node.h, node.g, node.f, openset.len(), closeset.len());
+        } else {
+            bar.set_length(closeset.len() as u64);
+            bar.set_message(format!("{:?}", openset.len()).as_str());
+            bar.set_position(node.h as u64);
+        }
         let index = closeset.len();
         let childs = node.get_childs(index, &mut hashmap);
         closeset.push(node);
@@ -72,6 +90,7 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
             memory = openset.len() + closeset.len() + hashmap.len();
         }
     }
+    bar.finish_and_clear();
     let mut sequence = Vec::<Movement>::new();
     let end = closeset.pop().unwrap();
     sequence.push((*end).movement);
@@ -87,6 +106,7 @@ pub fn process(mut start_node: Node) -> Result<Solved, &'static str> {
         memory: memory,
         complexity: complextity,
         sequence: sequence,
+        start_node: un_translated_node,
     })
 }
 
