@@ -49,14 +49,7 @@ fn init_map(matches: &ArgMatches) -> Result<Node, &'static str> {
         _ => heuristic_func != Heuristic::Uniform,
     };
     match matches.value_of("FILE") {
-        Some(filename) => {
-            let (node, size) = lib_npuzzle::parse(filename, heuristic_func, boost, greedy)?;
-            match size {
-                size if size > 10   => Err("Ah ah nice try. it's too big !."),
-                size if size < 3    => Err("Size must be equals or higher than 3."),
-                _kk                 => Ok(node),
-            }
-        },
+        Some(filename) => lib_npuzzle::parse(filename, heuristic_func, boost, greedy),
         None => {
             let size = value_t!(matches.value_of("SIZE"), u16).unwrap_or_else(|e| e.exit());
             match size {

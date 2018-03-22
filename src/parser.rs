@@ -44,7 +44,7 @@ fn get_map_size(line: Vec<String>) -> Result <u16, String> {
             match line[0].parse::<u16>() {
                 Err(msg) => return Err(format!("File is not valid\n  '{}' is not an unsigned number\n>'{}'", line[0], msg)),
                 Ok(n) if n < 3 => return Err(format!("Puzzle is not valid\n  Minimum puzzle size is 3, got {}.", n)),
-                Ok(n) if n > 20 => return Err(format!("Puzzle is not valid\n  Maximum puzzle size is 20, got {}.", n)),
+                Ok(n) if n > 10 => return Err(format!("Puzzle is not valid\n  Maximum puzzle size is 10, got {}.", n)),
                 Ok(n) => Ok(n),
             }
         },
