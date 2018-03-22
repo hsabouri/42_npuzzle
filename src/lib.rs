@@ -119,14 +119,14 @@ pub fn process(mut start_node: Node, extra: bool, display_bar: bool) -> Result<S
     })
 }
 
-pub fn parse(filename: &str, func: Heuristic, boost: u16, greedy: bool) -> Result<Node, &'static str> {
+pub fn parse(filename: &str, func: Heuristic, boost: u16, greedy: bool) -> Result<(Node, u16), &'static str> {
     let (vec_spiral, point, size) = match parser::parse(filename) {
         Ok(x) => x,
         Err(msg) => {println!("{}", msg.red()); return Err("Failed to parse")},
     };
     let solver = Solver::new(size, func, boost, greedy);
     let map = Map::new(vec_spiral, &solver, point, None);
-    Ok(Node::new_from_map(map))
+    Ok((Node::new_from_map(map), size))
 }
 
 pub fn create_random(size: u16, func: Heuristic, boost: u16, greedy: bool) -> Result<Node, &'static str> {

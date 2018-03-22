@@ -43,16 +43,24 @@ fn init_map(matches: &ArgMatches) -> Result<Node, &'static str> {
         },
         None => 1
     };
+    if boost > 1000 { return Err("Boost value is too big (1-1000") }
     let greedy = match matches.occurrences_of("greedy") {
         0 => false,
         _ => heuristic_func != Heuristic::Uniform,
     };
     match matches.value_of("FILE") {
-        Some(filename) => lib_npuzzle::parse(filename, heuristic_func, boost, greedy),
+        Some(filename) => {
+            let (node, size) = lib_npuzzle::parse(filename, heuristic_func, boost, greedy)?;
+            match size {
+                size if size > 10   => Err("Ah ah nice try. it's too big !."),
+                size if size < 3    => Err("Size must be equals or higher than 3."),
+                _kk                 => Ok(node),
+            }
+        },
         None => {
             let size = value_t!(matches.value_of("SIZE"), u16).unwrap_or_else(|e| e.exit());
             match size {
-                size if size > 20   => Err("Ah ah nice try. it's too big !."),
+                size if size > 10   => Err("Ah ah nice try. it's too big !."),
                 size if size < 3    => Err("Size must be equals or higher than 3."),
                 size                => lib_npuzzle::create_random(size, heuristic_func, boost, greedy),
             }
@@ -88,7 +96,7 @@ fn main() {
             .long("size")
             .default_value("3")
             .takes_value(true)
-            .help("Size of a random generated N-puzzle [3 - 20]"))
+            .help("Size of a random generated N-puzzle [3 - 10]"))
         .arg(Arg::with_name("H")
             .help("Heuristic chosen to solve the puzzle")
             .short("H")
